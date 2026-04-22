@@ -52,5 +52,6 @@ Thumbs.db
 
 # environment variable files
 *.env
+*.env_prod
 
 app.yaml
