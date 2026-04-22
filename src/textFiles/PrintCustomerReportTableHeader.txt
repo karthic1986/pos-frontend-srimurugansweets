@@ -1,0 +1,6 @@
+<tr>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Total Amount</th>
+</tr>
+{{TableContent}}

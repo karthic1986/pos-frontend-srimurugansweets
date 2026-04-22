@@ -1,0 +1,5 @@
+ <tr>
+    <td style="text-align:left">{{name}}</td>
+    <td style="text-align:right">{{mobile}}</td>
+    <td style="text-align:right">{{totalAmount}}</td>
+ </tr>

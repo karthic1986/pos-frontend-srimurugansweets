@@ -1,0 +1,28 @@
+.box {
+    width: 100%;
+    height: 50px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #c0c0c0;
+    
+}
+.box > i{
+    font-size: 20px;
+    color: #777;
+}
+
+.box > input{
+    flex: 1;
+    height: 40px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    padding-left: 10px;
+}
+
+.row {
+    padding: 15px;
+    /* justify-content: space-between; */
+}

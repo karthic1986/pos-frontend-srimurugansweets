@@ -1,0 +1,6 @@
+<tr>
+	<td><a class="cut"></a><span contenteditable>{{ProductItem}}</span></td>
+	<td><span contenteditable>{{ProductPrice}}</span></td>
+	<td><span contenteditable>{{ProductQty}}</span></td>
+	<td><span data-prefix>₹</span><span>{{ProductAmount}}</span></td>
+</tr>

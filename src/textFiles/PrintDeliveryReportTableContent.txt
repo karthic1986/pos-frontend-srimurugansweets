@@ -1,0 +1,8 @@
+ <tr>
+    <td style="text-align:right">{{ProdCode}}</td>
+    <td style="text-align:left">{{ProdName}}</td>
+    <td style="text-align:right">{{OrderedQty}}</td>
+    <td style="text-align:right">{{DeliveredQty}}</td>
+    <td style="text-align:right">{{PendingQty}}</td>
+ </tr>
+ 

@@ -1,0 +1,12 @@
+<tr>
+    <th>Order Id</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Order Date</th>
+    <th>Delivert Date</th>
+    <th>Qty</th>
+    <th>Total Amount</th>
+    <th>Paid</th>
+    <th>Balance</th>
+  </tr>
+  {{TableContent}}

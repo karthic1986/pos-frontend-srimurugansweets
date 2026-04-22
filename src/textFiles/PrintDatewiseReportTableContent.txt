@@ -1,0 +1,10 @@
+ <tr>
+    <td style="text-align:right">{{orderId}}</td>
+    <td >{{orderDate}}</td>
+    <td style="text-align:left">{{name}}</td>
+    <td style="text-align:right">{{mobile}}</td>
+    <td style="text-align:left">{{isDelivery}}</td>
+    <td style="text-align:right">{{qty}}</td>
+    <td style="text-align:right">{{amount}}</td>
+ </tr>
+ 

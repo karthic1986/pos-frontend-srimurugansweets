@@ -1,0 +1,26 @@
+.m-auto {
+    font-size: 150%;
+ }
+
+ .dropdown-menu {
+    border: none;
+ }
+ .dropdown-menu a{
+    color: #4286f4;
+ }
+
+ .hamburger {
+   justify-items: left;
+ }
+
+ .customLabel {
+   margin-right: 20px;
+ }
+
+ /*
+ 
+ .dropdown-toggle::after{
+    display: none;
+ }
+ */
+ 

@@ -1,0 +1,17 @@
+{
+  "short_name": "Admire POS",
+  "name": "Helps you grow!",
+  "icons": [
+    {
+      "src": "/images/icons-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
+

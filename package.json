@@ -1,0 +1,57 @@
+{
+  "name": "pos",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@badrap/bar-of-progress": "^0.2.1",
+    "axios": "^0.27.2",
+    "date-fns": "^2.29.1",
+    "history": "^4.10.1",
+    "lodash": "^4.17.21",
+    "mdbreact": "^5.2.0",
+    "moment": "^2.29.4",
+    "print-js": "^1.6.0",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.4.0",
+    "react-bootstrap-icons": "^1.8.4",
+    "react-date-picker": "^8.4.0",
+    "react-dom": "^18.2.0",
+    "react-hooks-global-state": "^2.0.0",
+    "react-redux": "^8.0.2",
+    "react-router-dom": "^5.3.3",
+    "react-scripts": "5.0.1",
+    "react-toastify": "^9.0.8",
+    "redux": "^4.2.0",
+    "redux-thunk": "^2.4.1",
+    "sweetalert2": "^11.4.32",
+    "sweetalert2-react-content": "^5.0.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "react-dotenv": {
+    "whitelist": [
+      "API_BASIC_AUTH_USERNAME"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
+  }
+}

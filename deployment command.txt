@@ -1,0 +1,10 @@
+Deployment steps for dev branch with APP Engin
+1. npm install
+2. npm run build
+3. gcloud app deploy
+
+Deployment steps for prod branch with APP Engin
+1. git rebase dev
+1. npm install
+2. npm run build
+3. gcloud app deploy

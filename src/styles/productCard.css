@@ -1,0 +1,32 @@
+.cardProd{
+border-radius: 20px;
+height: 75%;
+width: auto;
+}
+.cardDiv
+{
+    width:9.5rem;
+    height: 20rem;
+    cursor: pointer;
+}
+.title{
+    font-size:medium;
+}
+
+.subTitle {
+    font-weight: normal;
+    color:darkslategray;
+}
+
+.text {
+    font-size: small;
+    font-weight:500;
+}
+
+.img {
+    object-fit: cover;
+    height: 50%;
+    width: 100%;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}

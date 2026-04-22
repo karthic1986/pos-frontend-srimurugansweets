@@ -1,0 +1,6 @@
+<tr>
+    <th>Name</th>
+    <th>Qty</th>
+    <th>Amount</th>
+  </tr>
+  {{TableContent}}

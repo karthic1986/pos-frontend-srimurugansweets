@@ -1,0 +1,10 @@
+<tr>
+    <th>Order No</th>
+    <th>Order Date</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Delivered</th>
+    <th>Qty</th>
+    <th>Amount</th>
+</tr>
+{{TableContent}}
