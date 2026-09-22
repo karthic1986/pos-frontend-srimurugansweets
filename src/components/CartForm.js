@@ -5,14 +5,17 @@ import { useStoreState as useStoreStateDelivery } from "../reducers/deliveryRedu
 import CustomToast from "./CustomToast";
 import { DropdownButton } from "react-bootstrap";
 import { Dropdown } from "react-bootstrap";
+import { Button, AutoComplete } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 import history from "../history";
 import { dispatch } from "../reducers/productReducer";
 import { GET_ACTIVE_PRODUCTS } from "../actions/type";
 import constants from "../constants";
 import { set } from "lodash";
+import { searchCustomersByMobileSvc } from "../actions/customerAction";
+import CustomerEditDrawer from "./CustomerEditDrawer";
 
 export const CartForm = (props) => {
-  const ref1 = useRef(null);
   const ref2 = useRef(null);
   const ref3 = useRef(null);
   const ref4 = useRef(null);
@@ -25,6 +28,12 @@ export const CartForm = (props) => {
   const orderFromDelivery = useStoreStateDelivery("orderDetails").order;
   const [advPayment, setAdvPayment] = useState(0);
   const [totAmt, setTotAmt] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const [customerOptions, setCustomerOptions] = useState([]);
+  const lastSearchedMobileRef = useRef("");
+  const [customerRecord, setCustomerRecord] = useState(() => (isOrderFromDelivery || isOrderFromEdit ? customerFromDelivery : null));
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
 
   const options = ["Morning", "Afternoon", "Evening", "Night"];
 
@@ -101,11 +110,51 @@ export const CartForm = (props) => {
     paymentFunction();
   }, []);
 
-  const handleChangeMobile = () => {
-    const { name, value } = ref1.current;
+  const handleChangeMobile = (value) => {
     setState(() => ({
       ...state,
-      [name]: value,
+      customerNumber: value,
+    }));
+
+    if (value.length !== 10) {
+      setCustomerOptions([]);
+      return;
+    }
+
+    lastSearchedMobileRef.current = value;
+    searchCustomersByMobileSvc(value)
+      .then((res) => {
+        if (lastSearchedMobileRef.current !== value) return; // stale response, input has since changed
+        const matches = res.data || [];
+        setCustomerOptions(
+          matches.map((customer) => ({
+            key: customer.id,
+            value: customer.mobile.toString(),
+            label: `${customer.mobile} - ${customer.name}`,
+            customer,
+          }))
+        );
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const handleSelectCustomer = (value, option) => {
+    setState(() => ({
+      ...state,
+      customerNumber: option.customer.mobile.toString(),
+      customerName: option.customer.name,
+    }));
+    setCustomerRecord(option.customer);
+  };
+
+  const handleCustomerSaved = (updatedCustomer) => {
+    setCustomerRecord(updatedCustomer);
+    setState(() => ({
+      ...state,
+      customerName: updatedCustomer.name,
+      customerNumber: updatedCustomer.mobile.toString(),
     }));
   };
 
@@ -179,6 +228,11 @@ export const CartForm = (props) => {
   };
 
   const handleSubmitOrder = () => {
+    // Guard against double submission (e.g. double-clicking the button)
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
     // console.log("Delivered", state.isDelivered);
     // console.log("OrderId", orderFromDelivery);
     if (state.payment === "") state.payment = "0";
@@ -187,24 +241,30 @@ export const CartForm = (props) => {
     //   state.payment = totAmt;
     // }
     console.log(totAmt, state.payment, advPayment);
+    let orderResult;
     if (state.isDelivered) {
       console.log(totAmt, advPayment + parseInt(state.payment) + parseInt(state.discount));
       if (totAmt === advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderFromDelivery?.id ? props.createOrder(state, orderFromDelivery.id) : props.createOrder(state, 0);
+        orderResult = orderFromDelivery?.id ? props.createOrder(state, orderFromDelivery.id) : props.createOrder(state, 0);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else if (isOrderFromEdit) {
       if (totAmt >= advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        props.createOrder(state, orderFromDelivery.id);
+        orderResult = props.createOrder(state, orderFromDelivery.id);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else {
-      props.createOrder(state, 0);
+      orderResult = props.createOrder(state, 0);
     }
+
+    Promise.resolve(orderResult).finally(() => {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    });
 
     setTimeout(() => {
       setState(() => ({
@@ -253,25 +313,53 @@ export const CartForm = (props) => {
           <div className="col-md-6">
             <div className="form-group">
               <label>Customer Mobile number</label>
-              <input
-                type="number"
-                onWheel={(e) => {
-                  e.currentTarget.blur();
-                }}
-                name="customerNumber"
-                ref={ref1}
-                required
-                className="form-control"
-                value={state.customerNumber}
-                onChange={handleChangeMobile}
-                readOnly={isOrderFromDelivery || isOrderFromEdit ? true : false}
-              />
+              {isOrderFromDelivery || isOrderFromEdit ? (
+                <input type="number" name="customerNumber" required className="form-control" value={state.customerNumber} readOnly />
+              ) : (
+                <AutoComplete
+                  className="w-100"
+                  options={customerOptions}
+                  value={state.customerNumber}
+                  onSearch={handleChangeMobile}
+                  onChange={handleChangeMobile}
+                  onSelect={handleSelectCustomer}
+                  filterOption={false}
+                >
+                  <input
+                    type="number"
+                    onWheel={(e) => {
+                      e.currentTarget.blur();
+                    }}
+                    name="customerNumber"
+                    required
+                    className="form-control"
+                  />
+                </AutoComplete>
+              )}
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-group">
               <label>Customer Name</label>
-              <input type="text" name="customerName" ref={ref2} className="form-control" value={state.customerName} onChange={handleChangeName} readOnly={isOrderFromDelivery || isOrderFromEdit ? true : false} />
+              <div className="d-flex align-items-center">
+                <input
+                  type="text"
+                  name="customerName"
+                  ref={ref2}
+                  className="form-control"
+                  value={state.customerName}
+                  onChange={handleChangeName}
+                  readOnly={isOrderFromDelivery || isOrderFromEdit ? true : false}
+                />
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  className="ml-2"
+                  disabled={!customerRecord?.id}
+                  title="Edit customer info"
+                  onClick={() => setShowEditDrawer(true)}
+                />
+              </div>
             </div>
           </div>
           {!isOrderFromDelivery && (
@@ -368,17 +456,18 @@ export const CartForm = (props) => {
           </div>
           <div className="col-md-6">
             <div className="form-group">
-              <button className="btn btn-secondary" type="button" onClick={handleCancelOrder}>
+              <button className="btn btn-secondary" type="button" onClick={handleCancelOrder} disabled={isSubmitting}>
                 Cancel Order
               </button>
               &nbsp;&nbsp;
-              <button className="btn btn-primary" type="submit" onClick={handleSubmitOrder}>
+              <Button type="primary" htmlType="submit" onClick={handleSubmitOrder} loading={isSubmitting} disabled={isSubmitting}>
                 Submit Order
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </form>
+      <CustomerEditDrawer open={showEditDrawer} customer={customerRecord} onClose={() => setShowEditDrawer(false)} onSaved={handleCustomerSaved} />
     </div>
   );
 };

@@ -100,7 +100,7 @@ const CartContent = () => {
 
     let payload = { order: order, orderDetails: cartList };
     console.log(payload);
-    createOrderSvc(payload)
+    return createOrderSvc(payload)
       .then((res) => {
         console.log(res);
         if (res.status == 200) {

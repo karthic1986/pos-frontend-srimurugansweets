@@ -69,6 +69,9 @@
 				article h1 { clip: rect(0 0 0 0); position: absolute; }
 				article address { float: left; font-size: 120%; font-weight: bold; }
 
+				/* order qr code */
+				img.order-qrcode { display: block; float: none; clear: both; width: 90px; height: 90px; margin: 0.5em 0 0; }
+
 				/* table meta & balance */
 				table.meta { float: right; width: 40%; }
 				table.meta:after, table.balance:after { clear: both; content: ""; display: table; }
@@ -90,6 +93,7 @@
 				/* table common */
 				table.common { font-size: 100%; table-layout: fixed; width: 100%; }
 				table.common, table.common tr, table.common td { border-collapse: collapse; border: none; }
+				table.common td { width: 50%; vertical-align: top; }
 
 
 
@@ -174,6 +178,7 @@
 			<h1>Recipient</h1>
 			<address class="content">
 				<p>{{CustomerName}}<br>{{CustomerMobile}}</p>
+				<img class="order-qrcode" src="{{OrderQRCode}}" alt="Order QR Code" />
 			</address>
 			<table class="meta">
 				<tr>
@@ -214,11 +219,7 @@
 			<table class="common">
 			<tr>
 			<td>
-				<table class="notes">
-				<tr>
-				<td><span>{{Notes}}</span></td>
-				</tr>
-				</table>
+				{{NotesSection}}
 			</td>
 			<td>
 				<table class="balance">

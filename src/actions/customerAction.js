@@ -26,6 +26,16 @@ export const getEntireCustomersSvc = async () => {
   // });
 };
 
+export const searchCustomersByMobileSvc = async (mobile) => {
+  let url = constants.MIDDLEWARE_SEARCH_CUSTOMERS_URL.replace("{{mobile}}", mobile);
+  return await axios.get(url, {
+    auth: {
+      username: constants.MIDDLEWARE_USERNAME,
+      password: constants.MIDDLEWARE_PASSWORD,
+    },
+  });
+};
+
 export const getActiveCustomersSvc = () => {
   axios
     .get(constants.MIDDLEWARE_GET_ACTIVE_CUSTOMERS_URL, {

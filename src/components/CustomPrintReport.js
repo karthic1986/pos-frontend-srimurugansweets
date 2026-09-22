@@ -1,5 +1,6 @@
 
 import printJS from "print-js";
+import QRCode from "qrcode";
 import OrderPrintHeader from "../textFiles/OrderPrintHeader.txt";
 import OrderPrintTable from "../textFiles/OrderPrintTable.txt";
 import constants from "../constants";
@@ -28,6 +29,11 @@ const CustomPrintReport = async (orderDetails, orderId,productList) => {
     htmlTemplate = htmlTemplate.replace(
         "{{OrderID}}", orderId
     );
+
+    const orderQRCode = await QRCode.toDataURL(orderId.toString(), { margin: 1, width: 150 });
+    htmlTemplate = htmlTemplate.replace(
+        "{{OrderQRCode}}", orderQRCode
+    );
     htmlTemplate = htmlTemplate.replace(
         "{{OrderDate}}", moment(orderDetails.orderDate).format("DD-MM-YYYY")
     );
@@ -52,9 +58,12 @@ const CustomPrintReport = async (orderDetails, orderId,productList) => {
         orderDetails.totalAmount
     );
 
+    const hasNotes = orderDetails.notes && orderDetails.notes.trim().length > 0;
     htmlTemplate = htmlTemplate.replace(
-        "{{Notes}}",
-        orderDetails.notes
+        "{{NotesSection}}",
+        hasNotes
+            ? `<table class="notes"><tr><td><span>${orderDetails.notes}</span></td></tr></table>`
+            : ""
     );
 
     htmlTemplate = htmlTemplate.replace(
