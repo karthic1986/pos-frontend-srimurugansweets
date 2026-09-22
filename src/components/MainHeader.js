@@ -1,8 +1,16 @@
 import React from 'react';
+import '../styles/mainHeader.css';
+import { logoutSvc } from '../actions/authAction';
+import history from '../history';
 
-
+const logout = () => {
+    logoutSvc();
+    history.push('/');
+};
 
 const MainHeader = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+
     return (
         //  <!-- Navbar -->
         <nav className="main-header navbar navbar-expand navbar-white navbar-light">
@@ -17,7 +25,7 @@ const MainHeader = () => {
             </ul>
 
             {/* <!-- Right navbar links --> */}
-            <ul className="navbar-nav ml-auto">
+            <ul className="navbar-nav ml-auto align-items-center">
                 {/* <!-- Notifications Dropdown Menu --> */}
                 <li className="nav-item dropdown">
                     <a className="nav-link" data-toggle="dropdown" href="#">
@@ -43,6 +51,24 @@ const MainHeader = () => {
                         </a>
                         <div className="dropdown-divider"></div>
                         <a href="#" className="dropdown-item dropdown-footer">See All Notifications</a>
+                    </div>
+                </li>
+
+                {/* <!-- User Profile Dropdown --> */}
+                <li className="nav-item dropdown user-menu">
+                    <a href="#" className="nav-link d-flex align-items-center" data-toggle="dropdown">
+                        <span className="header-user-name font-weight-bold d-none d-sm-inline-block">{user.firstName}</span>
+                        <img
+                            src={process.env.PUBLIC_URL + "dist/img/user2-160x160.png"}
+                            className="header-user-avatar img-circle elevation-2"
+                            alt="User"
+                        />
+                    </a>
+                    <div className="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <a href="#" className="dropdown-item" onClick={logout}>
+                            <i className="fas fa-sign-out-alt mr-2"></i>
+                            Logout
+                        </a>
                     </div>
                 </li>
             </ul>

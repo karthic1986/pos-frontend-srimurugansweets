@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ProductCard from "../../components/ProductCard";
 import { getActiveProductsSvc, addProductSvc } from "../../actions/productAction";
+import { getEntireCategoriesSvc } from "../../actions/categoryAction";
 import { useStoreState, dispatch } from "../../reducers/productReducer";
 import AddProdQtyModal from "../../components/Modal/AddProdQtyModal";
 import { Link } from "react-router-dom";
@@ -12,6 +13,8 @@ const OrderContent = () => {
   const cartCount = useStoreState("cartCount");
   const [totalQty, setTotalQty] = useState(0);
   const [totalAmt, setTotalAmt] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
   const toggleAddModal = () => {
     setShowAddModal(!showAddModal);
@@ -60,6 +63,17 @@ const OrderContent = () => {
     calcTotalQtyAndTotalAmt();
   }, []);
 
+  useEffect(() => {
+    getEntireCategoriesSvc().then((res) => {
+      setCategories(res.data || []);
+    });
+  }, []);
+
+  const filteredProdList =
+    selectedCategoryId === ""
+      ? prodList
+      : prodList.filter((prod) => String(prod.categoryId) === String(selectedCategoryId));
+
   return (
     // <!-- Content Wrapper. Contains page content -->
     <div className="content-wrapper">
@@ -83,38 +97,60 @@ const OrderContent = () => {
         {/* <!-- /.container-fluid --> */}
       </section>
 
-      <section className="content">
-        <div className="card">
+      <section className="content order-product-section">
+        <div className="card order-product-card">
           <div className="card-header">
             <h3 className="card-title">Product List</h3>
             <div className="card-tools">
-              {cartCount > 0 && (
-                <Link to="/cart">
-                  <button type="button" className="btn btn-tool">
-                    <i className="fas fa-shopping-cart"></i>&nbsp;&nbsp;Cart(
-                    {cartCount})
-                  </button>
-                </Link>
-              )}
-              <button type="button" className="btn btn-tool" onClick={toggleAddModal}>
-                <i className="fas fa-plus"></i>&nbsp;&nbsp;Product
+              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={toggleAddModal}>
+                <i className="fas fa-plus mr-1"></i>
+                Add Product
               </button>
             </div>
           </div>
-          <div className="card-body">
+          <div className="order-category-tags">
+            <button
+              type="button"
+              className={`btn btn-sm rounded-pill category-tag ${selectedCategoryId === "" ? "btn-primary" : "btn-outline-secondary"}`}
+              onClick={() => setSelectedCategoryId("")}
+            >
+              All Category
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`btn btn-sm rounded-pill category-tag ${String(selectedCategoryId) === String(c.id) ? "btn-primary" : "btn-outline-secondary"}`}
+                onClick={() => setSelectedCategoryId(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+          <div className="card-body order-product-scroll">
             <div className="row">
-              <div className="col">Total Quantity: {totalQty}</div>
-              <div className="col">Total Amount: ₹{totalAmt}</div>
-            </div>
-            <div className="row">
-              {prodList.map((prod) => {
+              {filteredProdList.map((prod) => {
                 return <ProductCard key={prod.id} prod={prod} prodList={prodList} calcTotalQtyAndTotalAmt={calcTotalQtyAndTotalAmt} />;
               })}
             </div>
-
-            <AddProdQtyModal isOpen={showAddModal} toggle={toggleAddModal} payload={payloadFunction} />
+          </div>
+          <div className="card-footer order-product-footer">
+            <div className="order-product-totals">
+              <span>Total Quantity: {totalQty}</span>
+              <span>Total Amount: ₹{totalAmt}</span>
+            </div>
+            {cartCount > 0 && (
+              <Link to="/cart">
+                <button type="button" className="btn btn-primary btn-sm">
+                  <i className="fas fa-shopping-cart mr-1"></i>
+                  Cart ({cartCount})
+                </button>
+              </Link>
+            )}
           </div>
         </div>
+
+        <AddProdQtyModal isOpen={showAddModal} toggle={toggleAddModal} payload={payloadFunction} />
       </section>
     </div>
   );

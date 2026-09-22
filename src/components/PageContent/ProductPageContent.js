@@ -1,18 +1,23 @@
 import React,{useEffect, useState,useRef} from 'react';
 import { getEntireProductsSvc,addProductSvc,editProductSvc,deleteProductSvc } from '../../actions/productAction';
+import { getEntireCategoriesSvc,addCategorySvc,editCategorySvc,deleteCategorySvc } from '../../actions/categoryAction';
 import ProductModal from '../../components/Modal/ProductModal';
 import DeleteModal from '../../components/Modal/DeleteModal';
+import CategoryManageDrawer from '../../components/CategoryManageDrawer';
 import CustomToast from '../../components/CustomToast';
 
 const ProductPageContent=()=>{
 
   const myGrid = useRef(null);
-    
+  const categoryMapRef = useRef({});
+
     const [showAddEditModal,setShowAddEditModal] = useState(false);
     const [showDeleteModal,setShowDeleteModal] = useState(false);
     const [isEdit,setIsEdit] = useState(false);
     const [currentProd,setCurrentProd] = useState([]);
-    
+    const [categories,setCategories] = useState([]);
+    const [showManageCategories,setShowManageCategories] = useState(false);
+
     const isShowAddEditModal = (value) => {
       setShowAddEditModal(value);
     };
@@ -37,6 +42,42 @@ const ProductPageContent=()=>{
         setCurrentProd(prod);
         isShowDeleteModal(true);
     }
+
+    const loadCategories = async () => {
+        const res = await getEntireCategoriesSvc();
+        const list = res.data || [];
+        setCategories(list);
+        const map = {};
+        list.forEach((c) => { map[c.id] = c.name; });
+        categoryMapRef.current = map;
+        return list;
+    };
+
+    const handleAddCategory = async (name) => {
+        const res = await addCategorySvc({ name, isActive: true });
+        const newCategory = res.data;
+        setCategories((prev) => [...prev, newCategory]);
+        categoryMapRef.current = { ...categoryMapRef.current, [newCategory.id]: newCategory.name };
+        return newCategory;
+    };
+
+    const handleEditCategory = async (id, name) => {
+        await editCategorySvc(id, { name });
+        const updatedCategory = { id, name };
+        setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)));
+        categoryMapRef.current = { ...categoryMapRef.current, [id]: name };
+        loadProductsGrid();
+        return updatedCategory;
+    };
+
+    const handleDeleteCategory = async (id) => {
+        await deleteCategorySvc(id);
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+        const map = { ...categoryMapRef.current };
+        delete map[id];
+        categoryMapRef.current = map;
+        loadProductsGrid();
+    };
 
     const addProduct =(state)=>{
         addProductSvc(state)
@@ -86,16 +127,22 @@ const ProductPageContent=()=>{
 
 
     const getTableContent = (productList) => {
+        const categoryMap = categoryMapRef.current;
+        const enrichedProductList = productList.map((prod) => ({
+          ...prod,
+          categoryName: categoryMap[prod.categoryId] || "-",
+        }));
         window.jQuery(myGrid.current).jsGrid({
           height: "auto",
           width: "100%",
           sorting: true,
           paging: true,
           heading: true,
-          data: productList,
+          data: enrichedProductList,
           fields: [
             { name: "id", type: "text", title: "Id" },
             { name: "name", type: "text", title: "Name" },
+            { name: "categoryName", type: "text", title: "Category" },
             { name: "price", type: "number", title: "Price" },
             {
               type: "control",
@@ -128,7 +175,10 @@ const ProductPageContent=()=>{
       }
     
       useEffect(() => {
-        loadProductsGrid();
+        (async () => {
+          await loadCategories();
+          await loadProductsGrid();
+        })();
       }, []);
     
     
@@ -158,10 +208,19 @@ const ProductPageContent=()=>{
               <div className="card-tools">
                 <button
                   type="button"
-                  className="btn btn-tool"
+                  className="btn btn-outline-secondary btn-sm mr-2"
+                  onClick={()=>setShowManageCategories(true)}
+                >
+                  <i className="fas fa-tags mr-1"></i>
+                  Manage Categories
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
                   onClick={handleAddClick}
                 >
-                  <i className="fas fa-plus"></i>&nbsp;&nbsp;Product
+                  <i className="fas fa-plus mr-1"></i>
+                  Add Product
                 </button>
               </div>
             </div>
@@ -174,12 +233,22 @@ const ProductPageContent=()=>{
                 isEdit={isEdit}
                 AddProduct={addProduct}
                 EditProduct={editProduct}
+                categories={categories}
+                onAddCategory={handleAddCategory}
               />
               <DeleteModal
                 isOpen={showDeleteModal}
                 obj={currentProd}
                 toggle={isShowDeleteModal}
                 delete={deleteProduct}
+              />
+              <CategoryManageDrawer
+                open={showManageCategories}
+                categories={categories}
+                onClose={()=>setShowManageCategories(false)}
+                onAdd={handleAddCategory}
+                onEdit={handleEditCategory}
+                onDelete={handleDeleteCategory}
               />
             </div>
           </div>

@@ -324,6 +324,7 @@ export const CartForm = (props) => {
                   onChange={handleChangeMobile}
                   onSelect={handleSelectCustomer}
                   filterOption={false}
+                  autoFocus
                 >
                   <input
                     type="number"
@@ -456,11 +457,11 @@ export const CartForm = (props) => {
           </div>
           <div className="col-md-6">
             <div className="form-group">
-              <button className="btn btn-secondary" type="button" onClick={handleCancelOrder} disabled={isSubmitting}>
+              <button className="btn btn-secondary order-action-btn" type="button" onClick={handleCancelOrder} disabled={isSubmitting}>
                 Cancel Order
               </button>
               &nbsp;&nbsp;
-              <Button type="primary" htmlType="submit" onClick={handleSubmitOrder} loading={isSubmitting} disabled={isSubmitting}>
+              <Button className="order-action-btn" type="primary" htmlType="submit" onClick={handleSubmitOrder} loading={isSubmitting} disabled={isSubmitting}>
                 Submit Order
               </Button>
             </div>

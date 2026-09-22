@@ -4,4 +4,14 @@
  font-size: large;
 }
 
+.order-action-btn.btn,
+.order-action-btn.ant-btn {
+  height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
 

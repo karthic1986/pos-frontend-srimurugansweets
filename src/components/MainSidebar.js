@@ -1,16 +1,9 @@
 import React from "react";
-import { logoutSvc } from "../actions/authAction";
-import history from "../history";
-
-const logout = () => {
-  //console.log("");
-  logoutSvc();
-  history.push("/");
-  //axios.get("/logout").then(()=>this.props.history.push("/"));
-};
+import { useLocation } from "react-router-dom";
 
 const MainSidebar = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { pathname } = useLocation();
+  const navLinkClass = (path) => `nav-link${pathname === path ? " active" : ""}`;
 
   return (
     // <!-- Main Sidebar Container -->
@@ -23,53 +16,41 @@ const MainSidebar = () => {
 
       {/* <!-- Sidebar --> */}
       <div className="sidebar">
-        {/* <!-- Sidebar user panel (optional) --> */}
-        <div className="user-panel mt-3 pb-3 mb-3 d-flex">
-          <div className="image">
-            <img src={process.env.PUBLIC_URL + "dist/img/user2-160x160.png"} className="img-circle elevation-2" alt="User Image" />
-          </div>
-          <div className="info">
-            <a href="#" className="d-block">
-              {user.firstName}
-            </a>
-          </div>
-        </div>
-
         {/* <!-- Sidebar Menu --> */}
         <nav className="mt-2">
           <ul className="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <li className="nav-item">
-              <a href="/dashboard" className="nav-link">
+              <a href="/dashboard" className={navLinkClass("/dashboard")}>
                 <i className="nav-icon fas fa-tachometer-alt"></i>
                 <p>Dashboard</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/customer" className="nav-link">
+              <a href="/customer" className={navLinkClass("/customer")}>
                 <i className="nav-icon fas fa-users"></i>
                 <p>Customers</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/product" className="nav-link">
+              <a href="/product" className={navLinkClass("/product")}>
                 <i className="nav-icon fas fa-th"></i>
                 <p>Products</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/order" className="nav-link">
+              <a href="/order" className={navLinkClass("/order")}>
                 <i className="nav-icon fas fa-edit"></i>
                 <p>Order</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/orderedit" className="nav-link">
+              <a href="/orderedit" className={navLinkClass("/orderedit")}>
                 <i className="nav-icon fas fa-solid fa-pen"></i>
                 <p>Order Edit</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/delivery" className="nav-link">
+              <a href="/delivery" className={navLinkClass("/delivery")}>
                 <i className="nav-icon fas fa-solid fa-truck"></i>
                 <p>Order Delivery</p>
               </a>
@@ -114,42 +95,33 @@ const MainSidebar = () => {
             <br></br>
             <div className="user-panel"> </div>
             <li className="nav-item">
-              <a href="/deliveryReport" className="nav-link">
+              <a href="/deliveryReport" className={navLinkClass("/deliveryReport")}>
                 <i className="nav-icon fas fa-chart-pie"></i>
                 <p>Delivery</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/nondeliveryReport" className="nav-link">
+              <a href="/nondeliveryReport" className={navLinkClass("/nondeliveryReport")}>
                 <i className="nav-icon fas fa-chart-pie"></i>
                 <p>Non-Delivery</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/productReport" className="nav-link">
+              <a href="/productReport" className={navLinkClass("/productReport")}>
                 <i className="nav-icon fas fa-chart-pie"></i>
                 <p>Product wise</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/customerReport" className="nav-link">
+              <a href="/customerReport" className={navLinkClass("/customerReport")}>
                 <i className="nav-icon fas fa-chart-pie"></i>
                 <p>Customer wise</p>
               </a>
             </li>
             <li className="nav-item">
-              <a href="/dateWiseReport" className="nav-link">
+              <a href="/dateWiseReport" className={navLinkClass("/datewiseReport")}>
                 <i className="nav-icon fas fa-chart-pie"></i>
                 <p>Date wise</p>
-              </a>
-            </li>
-            <br></br>
-            <div className="user-panel"> </div>
-
-            <li className="nav-item">
-              <a href="#" className="nav-link" onClick={logout}>
-                <i className="nav-icon fas fa-user"></i>
-                <p>Logout</p>
               </a>
             </li>
           </ul>

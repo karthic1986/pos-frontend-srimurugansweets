@@ -13,6 +13,9 @@ module.exports = Object.freeze({
   MIDDLEWARE_GET_ACTIVE_PRODUCTS_URL: MIDDLEWARE_BASE_URL + "/api/products/active",
   MIDDLEWARE_PRODUCTS_URL: MIDDLEWARE_BASE_URL + "/api/products/",
 
+  // Category
+  MIDDLEWARE_CATEGORIES_URL: MIDDLEWARE_BASE_URL + "/api/categories/",
+
   // Customer
   MIDDLEWARE_GET_ACTIVE_CUSTOMERS_URL: MIDDLEWARE_BASE_URL + "/api/customers/active",
   MIDDLEWARE_CUSTOMERS_URL: MIDDLEWARE_BASE_URL + "/api/customers/",

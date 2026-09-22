@@ -5,7 +5,7 @@ import Modal from 'react-bootstrap/Modal';
 import '../../styles/modal.css';
 
 const ProductModal = props =>{
-    
+
     const prod = props.currentProd;
     const ref1 = useRef(null);
     const ref2 = useRef(null);
@@ -13,26 +13,53 @@ const ProductModal = props =>{
     const ref4 = useRef(null);
     const isEdit = props.isEdit;
     const title = isEdit?"Edit Product":"Add Product";
+    const categories = props.categories || [];
     const [state, setState ] = useState(
         {
             name:"",
-            categoryId:1,
+            categoryId:"",
             shortName:"",
             price:"",
             isActive:true,
         }
     );
-    
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+
     const clearInputs =()=>{
         let clear={
             name:"",
-            categoryId:1,
+            categoryId:"",
             shortName:"",
             price:"",
             isActive:true,
         }
         setState(clear);
+        setShowAddCategory(false);
+        setNewCategoryName("");
     }
+
+    const handleChangeCategory=(e)=>{
+        const value = e.target.value;
+        setState(()=>({
+            ...state,
+            categoryId:value
+        }));
+    };
+
+    const selectedCategoryId = state.categoryId !== "" ? state.categoryId : (isEdit ? prod.categoryId : "");
+
+    const handleCreateCategory = async () => {
+        const name = newCategoryName.trim();
+        if(!name) return;
+        const newCategory = await props.onAddCategory(name);
+        setState((s)=>({
+            ...s,
+            categoryId: newCategory.id,
+        }));
+        setNewCategoryName("");
+        setShowAddCategory(false);
+    };
 
     const handleChangeShortName=()=>{
         const{name,value} = ref2.current;
@@ -73,12 +100,13 @@ const ProductModal = props =>{
         var sname = state.shortName;
         var price = state.price;
         var isActive = state.isActive;
+        var categoryId = state.categoryId;
         let editState = {
             "name": name.length>0?name:prod.name,
-            "categoryId":1,
+            "categoryId": categoryId!==""?categoryId:prod.categoryId,
             "shortName": sname.length>0? sname:prod.shortName,
             "price": price>0?price:prod.price,
-            "isActive": isActive 
+            "isActive": isActive
         }
         props.EditProduct(editState);
     }
@@ -103,6 +131,52 @@ const ProductModal = props =>{
                         //value={state.name}
                         onChange={handleChangeName}
                     />
+                </div>
+                <br/>
+                <div className="form-outline">
+                    <Form.Label>Category</Form.Label>
+                    <div className="d-flex align-items-center">
+                        <select
+                            name="categoryId"
+                            className="form-control"
+                            value={selectedCategoryId}
+                            onChange={handleChangeCategory}
+                        >
+                            <option value="">Select category</option>
+                            {categories.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                        <Button
+                            type="button"
+                            variant="outline-secondary"
+                            className="ml-2"
+                            title="Add new category"
+                            onClick={()=>setShowAddCategory(!showAddCategory)}
+                        >
+                            +
+                        </Button>
+                    </div>
+                    {showAddCategory && (
+                        <div className="d-flex align-items-center mt-2">
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="New category name"
+                                value={newCategoryName}
+                                onChange={(e)=>setNewCategoryName(e.target.value)}
+                            />
+                            <Button
+                                type="button"
+                                variant="primary"
+                                className="ml-2"
+                                disabled={!newCategoryName.trim()}
+                                onClick={handleCreateCategory}
+                            >
+                                Add
+                            </Button>
+                        </div>
+                    )}
                 </div>
                 <br/>
                 <div className="form-outline">

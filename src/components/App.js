@@ -1,5 +1,7 @@
 import React from "react";
 import { Router, Route } from "react-router-dom";
+import "react-date-picker/dist/DatePicker.css";
+import "react-calendar/dist/Calendar.css";
 import LoginPage from "../pages/LoginPage";
 import Dashboard from "../pages/DashboardPage";
 import Cart from "../pages/CartPage";
