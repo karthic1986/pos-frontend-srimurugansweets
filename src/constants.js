@@ -24,6 +24,7 @@ module.exports = Object.freeze({
   // Report
   MIDDLEWARE_GET_DELIVERY_REPORT_URL: MIDDLEWARE_BASE_URL + "/api/reports/delivery?fdate={{fDate}}&tdate={{tDate}}",
   MIDDLEWARE_GET_NON_DELIVERY_REPORT_URL: MIDDLEWARE_BASE_URL + "/api/reports/nondelivery?fdate={{fDate}}&tdate={{tDate}}",
+  MIDDLEWARE_GET_NON_DELIVERY_REPORT_BY_PRODUCT_URL: MIDDLEWARE_BASE_URL + "/api/reports/nondeliverybyproduct?fdate={{fDate}}&tdate={{tDate}}",
   MIDDLEWARE_GET_REPORT_BY_CUSTOMER_URL: MIDDLEWARE_BASE_URL + "/api/reports/customerwisesales?fdate={{fDate}}&tdate={{tDate}}",
   MIDDLEWARE_GET_REPORT_BY_PRODUCT_URL: MIDDLEWARE_BASE_URL + "/api/reports/productwisesales?fdate={{fDate}}&tdate={{tDate}}",
   MIDDLEWARE_GET_REPORT_BY_DATE_URL: MIDDLEWARE_BASE_URL + "/api/reports/datewisesales?fdate={{fDate}}&tdate={{tDate}}",

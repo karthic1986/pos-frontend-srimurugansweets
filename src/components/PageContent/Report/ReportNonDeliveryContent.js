@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import DatePicker from "react-date-picker";
-import { nondeliveryReport } from "../../../actions/reportAction";
+import { nondeliveryReport, nondeliveryReportByProduct } from "../../../actions/reportAction";
 import printJS from "print-js";
 import PrintHeaderFooter from "../../../textFiles/PrintHeaderFooter.txt";
-import PrintNonDeliveryReportTableHeader from "../../../textFiles/PrintNonDeliveryReportTableHeader.txt";
-import PrintNonDeliveryReportTableContent from "../../../textFiles/PrintNonDeliveryReportTableContent.txt";
 import { concat } from "lodash";
 import CustomToast from "../../CustomToast";
 import moment from "moment";
@@ -17,6 +15,8 @@ const ReportNonDeliveryContent = () => {
     fromDate: past,
     toDate: new Date(),
   });
+  const [showAmount, setShowAmount] = useState(false);
+  const [reportType, setReportType] = useState("customer");
 
   useEffect(() => {
     getReport();
@@ -36,72 +36,123 @@ const ReportNonDeliveryContent = () => {
     });
   };
 
-  async function getReport() {
-    let res = await nondeliveryReport(state);
-    if (res.data !== null) {
-      //let tableContent = [];
-      res.data.map((d) => {
-        d.orderDate = moment(d.orderDate).format("DD-MM-YYYY");
-        d.deliveryDate = moment(d.deliveryDate).format("DD-MM-YYYY");
-      });
+  const handleChangeShowAmount = (e) => {
+    setShowAmount(e.target.checked);
+  };
 
-      setReport(res.data);
-      window.jQuery(myGrid.current).jsGrid({
-        height: "auto",
-        width: "100%",
-        sorting: true,
-        paging: true,
-        data: res.data,
-        fields: [
+  const handleChangeReportType = (e) => {
+    setReportType(e.target.value);
+  };
+
+  async function getReport() {
+    if (reportType === "product") {
+      let res = await nondeliveryReportByProduct(state);
+      if (res.data !== null) {
+        setReport(res.data);
+
+        let fields = [
+          { name: "productId", type: "text", title: "Product Id" },
+          { name: "name", type: "text", title: "Product Name" },
+          { name: "totalQty", type: "number", title: "Qty" },
+        ];
+        if (showAmount) {
+          fields.push({ name: "totalAmount", type: "number", title: "Total Amount" });
+        }
+
+        window.jQuery(myGrid.current).jsGrid({
+          height: "auto",
+          width: "100%",
+          sorting: true,
+          paging: true,
+          data: res.data,
+          fields,
+        });
+      } else {
+        CustomToast("error", "Try again");
+        console.log(res.status);
+      }
+    } else {
+      let res = await nondeliveryReport(state);
+      if (res.data !== null) {
+        //let tableContent = [];
+        res.data.map((d) => {
+          d.orderDate = moment(d.orderDate).format("DD-MM-YYYY");
+          d.deliveryDate = moment(d.deliveryDate).format("DD-MM-YYYY");
+        });
+
+        setReport(res.data);
+
+        let fields = [
           { name: "orderId", type: "text", title: "Order Id" },
           { name: "name", type: "text", title: "Customer Name" },
           { name: "mobile", type: "number", title: "Mobile" },
           { name: "orderDate", type: "date", title: "Order Date" },
           { name: "deliveryDate", type: "date", title: "Delivery Date" },
           { name: "totalQty", type: "number", title: "Qty" },
-          { name: "totalAmount", type: "number", title: "Total Amount" },
-          { name: "payment", type: "number", title: "Paid" },
-          { name: "balance", type: "number", title: "Balance Amount" },
-        ],
-      });
-    } else {
-      CustomToast("error", "Try again");
-      console.log(res.status);
+        ];
+        if (showAmount) {
+          fields.push({ name: "totalAmount", type: "number", title: "Total Amount" }, { name: "payment", type: "number", title: "Paid" }, { name: "balance", type: "number", title: "Balance Amount" });
+        }
+
+        window.jQuery(myGrid.current).jsGrid({
+          height: "auto",
+          width: "100%",
+          sorting: true,
+          paging: true,
+          data: res.data,
+          fields,
+        });
+      } else {
+        CustomToast("error", "Try again");
+        console.log(res.status);
+      }
     }
   }
 
   const printReport = async () => {
-    let htmlPrintData = "";
     const response = await fetch(PrintHeaderFooter);
     let htmlHeaderFooter = await response.text();
 
-    htmlHeaderFooter = htmlHeaderFooter.replace("{{TableName}}", "Non-Delivery Report");
+    const reportTitle = reportType === "product" ? "Non-Delivery Report (Product Wise)" : "Non-Delivery Report";
+    htmlHeaderFooter = htmlHeaderFooter.replace("{{TableName}}", reportTitle);
 
-    const tableHeaderResponse = await fetch(PrintNonDeliveryReportTableHeader);
-    let htmlTableHeader = await tableHeaderResponse.text();
+    let headerCols;
+    let rows = [];
 
-    htmlPrintData = htmlHeaderFooter.replace("{{TableContent}}", htmlTableHeader);
+    if (reportType === "product") {
+      headerCols = ["Product Id", "Product Name", "Qty"];
+      if (showAmount) {
+        headerCols.push("Total Amount");
+      }
 
-    let tableContent = "";
-    const tableContentResponse = await fetch(PrintNonDeliveryReportTableContent);
-    let htmlTableContent = await tableContentResponse.text();
-    let DummyTableContent = htmlTableContent;
+      report.map((item) => {
+        let cols = [item.productId, item.name, item.totalQty];
+        if (showAmount) {
+          cols.push(item.totalAmount);
+        }
+        rows.push(cols);
+      });
+    } else {
+      headerCols = ["Order Id", "Name", "Mobile", "Order Date", "Delivery Date", "Qty"];
+      if (showAmount) {
+        headerCols.push("Total Amount", "Paid", "Balance");
+      }
 
-    report.map((item) => {
-      htmlTableContent = htmlTableContent.replace("{{orderId}}", item.orderId);
-      htmlTableContent = htmlTableContent.replace("{{name}}", item.name);
-      htmlTableContent = htmlTableContent.replace("{{mobile}}", item.mobile);
-      htmlTableContent = htmlTableContent.replace("{{orderDate}}", item.orderDate);
-      htmlTableContent = htmlTableContent.replace("{{deliveryDate}}", item.deliveryDate);
-      htmlTableContent = htmlTableContent.replace("{{totalQty}}", item.totalQty);
-      htmlTableContent = htmlTableContent.replace("{{totalAmount}}", item.totalAmount);
-      htmlTableContent = htmlTableContent.replace("{{payment}}", item.payment);
-      htmlTableContent = htmlTableContent.replace("{{balance}}", item.balance);
-      tableContent = tableContent + htmlTableContent;
-      htmlTableContent = DummyTableContent;
-    });
+      report.map((item) => {
+        let cols = [item.orderId, item.name, item.mobile, item.orderDate, item.deliveryDate, item.totalQty];
+        if (showAmount) {
+          cols.push(item.totalAmount, item.payment, item.balance);
+        }
+        rows.push(cols);
+      });
+    }
 
-    htmlPrintData = htmlPrintData.replace("{{TableContent}}", tableContent);
+    const headerHtml = "<tr>" + headerCols.map((col) => `<th>${col}</th>`).join("") + "</tr>";
+    const rowsHtml = rows
+      .map((cols) => "<tr>" + cols.map((val, i) => `<td style="text-align:${i === 1 ? "left" : "right"}">${val}</td>`).join("") + "</tr>")
+      .join("");
+
+    const htmlPrintData = htmlHeaderFooter.replace("{{TableContent}}", headerHtml + rowsHtml);
 
     printJS({
       printable: htmlPrintData,
@@ -161,6 +212,28 @@ const ReportNonDeliveryContent = () => {
                   <DatePicker onChange={handleChangeToDate} className="input-group date" value={state.toDate} name="toDate" clearIcon={null} />
                 </div>
                 <div className="form-group"></div>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col-md-6">
+                <div className="form-group">
+                  <label>Report Type</label>
+                  <select className="form-control" value={reportType} onChange={handleChangeReportType}>
+                    <option value="customer">Customer Wise</option>
+                    <option value="product">Product Wise</option>
+                  </select>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-group">
+                  <label className="d-block">&nbsp;</label>
+                  <div className="form-check">
+                    <input type="checkbox" className="form-check-input" id="showAmount" checked={showAmount} onChange={handleChangeShowAmount} />
+                    <label className="form-check-label" htmlFor="showAmount">
+                      Show Amount
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="row">

@@ -29,6 +29,19 @@ export const nondeliveryReport = async (content) => {
   });
 };
 
+export const nondeliveryReportByProduct = async (content) => {
+  let url = constants.MIDDLEWARE_GET_NON_DELIVERY_REPORT_BY_PRODUCT_URL;
+  url = url.replace("{{fDate}}", format(content.fromDate, "yyyy-MM-dd"));
+  url = url.replace("{{tDate}}", format(content.toDate, "yyyy-MM-dd"));
+
+  return await axios.get(url, {
+    auth: {
+      username: constants.MIDDLEWARE_USERNAME,
+      password: constants.MIDDLEWARE_PASSWORD,
+    },
+  });
+};
+
 export const reportByCustomer = async (content) => {
   let url = constants.MIDDLEWARE_GET_REPORT_BY_CUSTOMER_URL;
   url = url.replace("{{fDate}}", format(content.fromDate, "yyyy-MM-dd"));
