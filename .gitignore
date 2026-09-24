@@ -54,6 +54,5 @@ Thumbs.db
 *.env
 *.env_prod
 
-app.yaml
 .gstack/
 .env_dev
