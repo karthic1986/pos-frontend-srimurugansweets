@@ -9,6 +9,7 @@
     "axios": "^0.27.2",
     "date-fns": "^2.29.1",
     "history": "^4.10.1",
+    "html5-qrcode": "^2.3.8",
     "lodash": "^4.17.21",
     "mdbreact": "^5.2.0",
     "moment": "^2.29.4",

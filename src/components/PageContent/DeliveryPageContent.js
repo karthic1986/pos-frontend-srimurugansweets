@@ -2,6 +2,8 @@ import React, { useState, useRef } from "react";
 import "../../styles/delivery.css";
 import { getOrderDetailsSvc, getSearchResultSvc } from "../../actions/deliveryAction";
 import CustomToast from "../CustomToast";
+import QrScannerModal from "../QrScannerModal";
+import { ScanOutlined, SearchOutlined, LoadingOutlined } from "@ant-design/icons";
 import moment from "moment";
 import { useHistory } from "react-router-dom";
 import { GET_ORDER_DETAILS } from "../../actions/type";
@@ -9,6 +11,10 @@ import { dispatch } from "../../reducers/deliveryReducer";
 
 const DeliveryPageContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(null);
+  const [resultCount, setResultCount] = useState(0);
   const myGrid = useRef(null);
   const history = useHistory();
 
@@ -16,18 +22,32 @@ const DeliveryPageContent = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleSearchButton = () => {
-    getSearchResultSvc(searchTerm)
+  const handleScan = (text) => {
+    setSearchTerm(text);
+    runSearch(text);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim() === "") return;
+    runSearch(searchTerm.trim());
+  };
+
+  const runSearch = (term) => {
+    setLoading(true);
+    getSearchResultSvc(term)
       .then((res) => {
         if (res.status == 200) {
-          CustomToast("success", "Here is your search result");
+          setSearched(term);
+          setResultCount(res.data.length);
           loadSearchResult(res.data);
         }
       })
       .catch((error) => {
         CustomToast("error", "Try again");
         console.log(error);
-      });
+      })
+      .finally(() => setLoading(false));
   };
 
   const handleSelectClick = (item) => {
@@ -107,72 +127,68 @@ const DeliveryPageContent = () => {
         </div>
       </section>
       <section className="content">
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Search Delivery Order</h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                <i class="fas fa-minus"></i>
-              </button>
-            </div>
-            {/* 
-                        <div className='box'>
-                            <i className='fa fa-search'></i>
-                            <input
-                                type="text"
-                                name="searchTerm"
-                                required
-                                className="form-control"
-                                value={searchTerm}
-                                onChange={handleSearchTerm}
-                                placeholder="Customer mobile number / order Id"
-                            />
-                        </div>
-                        <br />
-                        <button
-                            className='btn btn-primary d-grid'
-                            type='submit'
-                            onClick={handleSearchButton}
-                        >
-                            Search
-                        </button> */}
-          </div>
+        <div className="card dl-card">
           <div className="card-body">
-            <div className="row">
-              <div className="col-md-4">
-                <div className="form-group">
-                  <div className="box">
-                    <i className="fa fa-search"></i>
-                    <input type="text" name="searchTerm" required className="form-control" value={searchTerm} onChange={handleSearchTerm} placeholder="Customer mobile number / order Id" />
-                  </div>
-                </div>
+            <form className="dl-search" onSubmit={handleSearchSubmit}>
+              <label className="dl-label" htmlFor="dl-search-input">
+                Find an order
+              </label>
+              <div className="dl-field">
+                <SearchOutlined className="dl-field-icon" />
+                <input
+                  id="dl-search-input"
+                  type="text"
+                  inputMode="search"
+                  name="searchTerm"
+                  autoComplete="off"
+                  autoFocus
+                  className="dl-input"
+                  value={searchTerm}
+                  onChange={handleSearchTerm}
+                  placeholder="Mobile number or order id"
+                />
+                <button type="button" className="dl-scan" title="Scan order QR code" aria-label="Scan order QR code" onClick={() => setShowScanner(true)}>
+                  <ScanOutlined />
+                  <span>Scan</span>
+                </button>
+                <button type="submit" className="dl-submit" disabled={loading || searchTerm.trim() === ""}>
+                  {loading ? <LoadingOutlined /> : "Search"}
+                </button>
               </div>
-
-              <div className="col-md-4">
-                <div className="form-group">
-                  <button className="btn btn-primary d-grid" type="submit" onClick={handleSearchButton}>
-                    Search
-                  </button>
-                </div>
-              </div>
-              <div className="col-md-4"></div>
-            </div>
-
-            {/* <div id="jsGrid1" ref={myGrid}></div> */}
+              <p className="dl-hint">Type a 10-digit mobile number or an order id, or scan the QR code printed on the slip.</p>
+            </form>
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Search Results</h3>
+        <div className="card dl-card">
+          <div className="dl-results-head">
+            <h3 className="dl-results-title">Orders</h3>
+            {searched !== null && (
+              <span className="dl-results-meta">
+                {resultCount} {resultCount === 1 ? "match" : "matches"} for <strong>{searched}</strong>
+              </span>
+            )}
           </div>
-          {/* <!-- /.card-header --> */}
-          <div className="card-body">
+          {searched === null && (
+            <div className="dl-empty">
+              <ScanOutlined className="dl-empty-icon" />
+              <p className="dl-empty-title">No search yet</p>
+              <p className="dl-empty-text">Results will appear here.</p>
+            </div>
+          )}
+          {searched !== null && resultCount === 0 && (
+            <div className="dl-empty">
+              <SearchOutlined className="dl-empty-icon" />
+              <p className="dl-empty-title">No orders found</p>
+              <p className="dl-empty-text">Check the number and try again.</p>
+            </div>
+          )}
+          <div className="dl-grid" style={{ display: resultCount > 0 ? "block" : "none" }}>
             <div id="jsGrid1" ref={myGrid}></div>
           </div>
-          {/* <!-- /.card-body --> */}
         </div>
       </section>
+      <QrScannerModal open={showScanner} onClose={() => setShowScanner(false)} onScan={handleScan} />
     </div>
   );
 };

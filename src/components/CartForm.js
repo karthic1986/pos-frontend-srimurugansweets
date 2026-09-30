@@ -227,7 +227,13 @@ export const CartForm = (props) => {
     e.preventDefault();
   };
 
+  const isMobileValid = String(state.customerNumber ?? "").trim().length === 10;
+
   const handleSubmitOrder = () => {
+    if (!isMobileValid) {
+      CustomToast("error", "Please enter a valid 10 digit mobile number");
+      return;
+    }
     // Guard against double submission (e.g. double-clicking the button)
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
@@ -337,6 +343,7 @@ export const CartForm = (props) => {
                   />
                 </AutoComplete>
               )}
+              {state.customerNumber !== "" && !isMobileValid && <small className="text-danger">Mobile number must be 10 digits</small>}
             </div>
           </div>
           <div className="col-md-6">
@@ -461,7 +468,7 @@ export const CartForm = (props) => {
                 Cancel Order
               </button>
               &nbsp;&nbsp;
-              <Button className="order-action-btn" type="primary" htmlType="submit" onClick={handleSubmitOrder} loading={isSubmitting} disabled={isSubmitting}>
+              <Button className="order-action-btn" type="primary" htmlType="submit" onClick={handleSubmitOrder} loading={isSubmitting} disabled={isSubmitting || !isMobileValid}>
                 Submit Order
               </Button>
             </div>
