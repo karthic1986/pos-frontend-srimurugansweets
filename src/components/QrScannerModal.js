@@ -57,7 +57,6 @@ const QrScannerModal = ({ open, onClose, onScan }) => {
       clearTimeout(timer);
       if (started) stopScanner();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
