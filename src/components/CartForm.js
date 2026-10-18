@@ -1,26 +1,34 @@
 import React, { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import DatePicker from "react-date-picker";
 import "../styles/cart.css";
 import { useStoreState as useStoreStateDelivery } from "../reducers/deliveryReducer";
 import CustomToast from "./CustomToast";
-import { DropdownButton } from "react-bootstrap";
-import { Dropdown } from "react-bootstrap";
-import { Button, AutoComplete } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import { Button, AutoComplete, Segmented, Popconfirm, ConfigProvider } from "antd";
+import { EditOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import history from "../history";
 import { dispatch } from "../reducers/productReducer";
 import { GET_ACTIVE_PRODUCTS } from "../actions/type";
 import constants from "../constants";
-import { set } from "lodash";
 import { searchCustomersByMobileSvc } from "../actions/customerAction";
 import CustomerEditDrawer from "./CustomerEditDrawer";
 import { getAppSettingsMap, isThermalPrintEnabled } from "../actions/appSettingAction";
 
+// antd controls on this screen use the bill pad's accent and radius (cart.css).
+const CHECKOUT_THEME = { token: { colorPrimary: "#0d6efd", borderRadius: 8, fontFamily: "inherit" } };
+
+const DELIVERY_TIMES = ["Morning", "Afternoon", "Evening", "Night"];
+
+const toNumber = (value) => Number(value) || 0;
+// Round to paise so fractional prices can't leave a stray 0.0000001 balance.
+const toPaise = (value) => Math.round(value * 100) / 100;
+// Indian digit grouping, e.g. ₹1,23,456
+const rupees = (value) => `₹${toNumber(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
+const blurOnWheel = (e) => e.currentTarget.blur();
+
 export const CartForm = (props) => {
   const ref2 = useRef(null);
-  const ref3 = useRef(null);
-  const ref4 = useRef(null);
-  const ref5 = useRef(null);
   const ref6 = useRef(null);
 
   const isOrderFromDelivery = useStoreStateDelivery("isOrderFromDelivery");
@@ -35,8 +43,8 @@ export const CartForm = (props) => {
   const lastSearchedMobileRef = useRef("");
   const [customerRecord, setCustomerRecord] = useState(() => (isOrderFromDelivery || isOrderFromEdit ? customerFromDelivery : null));
   const [showEditDrawer, setShowEditDrawer] = useState(false);
-  // Checked = thermal printer, unchecked = this PC's printer (print dialog).
-  // Defaults to checked unless the THERMAL_PRINT_ENABLED setting is "false".
+  // Thermal printer or this PC's printer (print dialog). Defaults to the
+  // thermal printer unless the THERMAL_PRINT_ENABLED setting is "false".
   const [printOnThermal, setPrintOnThermal] = useState(true);
   const printChoiceTouchedRef = useRef(false);
 
@@ -47,8 +55,6 @@ export const CartForm = (props) => {
       })
       .catch((error) => console.log(error));
   }, []);
-
-  const options = ["Morning", "Afternoon", "Evening", "Night"];
 
   const [state, setState] = useState({
     customerName: "",
@@ -79,9 +85,7 @@ export const CartForm = (props) => {
       totalAmount: t,
     }));
 
-    console.log("state1", state);
     if (isOrderFromDelivery) {
-      console.log("isOrderFromDelivery", state);
       setState(() => ({
         ...state,
         payment: orderFromDelivery.totalAmount - orderFromDelivery.payment,
@@ -95,7 +99,6 @@ export const CartForm = (props) => {
         discount: 0,
       }));
     } else if (isOrderFromEdit) {
-      console.log("isOrderFromEdit", state);
       setState(() => ({
         ...state,
         payment: 0,
@@ -110,13 +113,6 @@ export const CartForm = (props) => {
         totalAmount: orderFromDelivery.totalAmount,
       }));
     }
-    console.log("state2", state);
-    // else{
-    //   setState(()=>({
-    //     ...state,
-    //     payment: t,
-    //   }));
-    // }
   };
 
   useEffect(() => {
@@ -179,21 +175,14 @@ export const CartForm = (props) => {
     }));
   };
 
-  const handleChangePayment = () => {
-    const { name, value } = ref4.current;
-    setState(() => ({
-      ...state,
-      [name]: value,
-    }));
-    console.log("state1", state);
+  const handleChangePayment = (e) => {
+    const { value } = e.target;
+    setState((prev) => ({ ...prev, payment: value }));
   };
 
-  const handleChangeDiscount = () => {
-    const { name, value } = ref5.current;
-    setState(() => ({
-      ...state,
-      [name]: value,
-    }));
+  const handleChangeDiscount = (e) => {
+    const { value } = e.target;
+    setState((prev) => ({ ...prev, discount: value }));
   };
 
   const handleChangeNotes = () => {
@@ -226,14 +215,15 @@ export const CartForm = (props) => {
       [name]: !state.isDelivered,
       payment: parseInt(state.totalAmount) - parseInt(state.advPayment),
     }));
-    console.log("state", state);
   };
 
-  const handleSelect = (eventKey) => {
-    setState(() => ({
-      ...state,
-      deliveryTime: options[eventKey],
-    }));
+  // "Deliver now" = the old Delivery checkbox ticked.
+  const handleChangeHandover = (value) => {
+    if ((value === "now") !== state.isDelivered) handleChangeCheckbox({ target: { name: "isDelivered" } });
+  };
+
+  const handleChangeDeliveryTime = (value) => {
+    setState((prev) => ({ ...prev, deliveryTime: value }));
   };
 
   const handleSubmit = (e) => {
@@ -252,17 +242,10 @@ export const CartForm = (props) => {
     isSubmittingRef.current = true;
     setIsSubmitting(true);
 
-    // console.log("Delivered", state.isDelivered);
-    // console.log("OrderId", orderFromDelivery);
     if (state.payment === "") state.payment = "0";
     if (state.discount === "") state.discount = "0";
-    // if (state.isDelivered === true && !isOrderFromDelivery) {
-    //   state.payment = totAmt;
-    // }
-    console.log(totAmt, state.payment, advPayment);
     let orderResult;
     if (state.isDelivered) {
-      console.log(totAmt, advPayment + parseInt(state.payment) + parseInt(state.discount));
       if (totAmt === advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
         orderResult = props.createOrder(state, orderFromDelivery?.id ? orderFromDelivery.id : 0, printOnThermal);
@@ -280,23 +263,12 @@ export const CartForm = (props) => {
       orderResult = props.createOrder(state, 0, printOnThermal);
     }
 
+    // On success CartContent prints and leaves this page; on failure the
+    // cashier's entries stay so they can fix the payment and resubmit.
     Promise.resolve(orderResult).finally(() => {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
     });
-
-    setTimeout(() => {
-      setState(() => ({
-        customerName: "",
-        customerNumber: "",
-        isDelivered: false,
-        deliveryDate: new Date(),
-        deliveryTime: "Morning",
-        payment: "",
-        notes: "",
-        discount: 0,
-      }));
-    }, 3000);
   };
 
   const clearOrder = () => {
@@ -325,191 +297,306 @@ export const CartForm = (props) => {
     history.push("/order");
   };
 
+  // Bill figures. totAmt is the order total (the saved total when delivering).
+  const items = props.prodList.filter((prod) => prod.qty > 0);
+  const itemCount = items.reduce((sum, prod) => sum + toNumber(prod.qty), 0);
+  const paidEarlier = toNumber(advPayment);
+  const discount = toNumber(state.discount);
+  const payingNow = toNumber(state.payment);
+  const amountDue = toPaise(totAmt - paidEarlier - discount);
+  const balance = toPaise(amountDue - payingNow);
+
+  let balanceStatus;
+  let balanceHint;
+  if (balance === 0) {
+    balanceStatus = "paid";
+    balanceHint = "Paid in full";
+  } else if (balance < 0) {
+    balanceStatus = "over";
+    balanceHint = `Paying ${rupees(-balance)} more than the bill`;
+  } else if (state.isDelivered) {
+    balanceStatus = "short";
+    balanceHint = `Collect ${rupees(balance)} more to deliver now`;
+  } else {
+    balanceStatus = "due";
+    balanceHint = "Due on delivery";
+  }
+
+  const isCustomerLocked = isOrderFromDelivery || isOrderFromEdit;
+  const showSchedule = !state.isDelivered && !isOrderFromDelivery;
+
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-6">
-            <div className="form-group">
-              <label>Customer Mobile number</label>
-              {isOrderFromDelivery || isOrderFromEdit ? (
-                <input type="number" name="customerNumber" required className="form-control" value={state.customerNumber} readOnly />
-              ) : (
-                <AutoComplete
-                  className="w-100"
-                  options={customerOptions}
-                  value={state.customerNumber}
-                  onSearch={handleChangeMobile}
-                  onChange={handleChangeMobile}
-                  onSelect={handleSelectCustomer}
-                  filterOption={false}
-                  autoFocus
-                >
+    <ConfigProvider theme={CHECKOUT_THEME}>
+      <form className="checkout" onSubmit={handleSubmit}>
+        <section className="co-panel" aria-labelledby="co-customer-title">
+          <header className="co-panel-head">
+            <h2 className="co-title" id="co-customer-title">
+              Customer
+            </h2>
+          </header>
+          <div className="co-panel-body">
+            <div className="co-field-row">
+              <div className="co-field co-mobile">
+                <label className="co-label" htmlFor="co-mobile">
+                  Mobile number
+                </label>
+                {isCustomerLocked ? (
+                  <input id="co-mobile" type="number" name="customerNumber" className="form-control co-input co-input-hero" value={state.customerNumber} readOnly />
+                ) : (
+                  <AutoComplete
+                    id="co-mobile"
+                    className="w-100"
+                    options={customerOptions}
+                    value={state.customerNumber}
+                    onSearch={handleChangeMobile}
+                    onChange={handleChangeMobile}
+                    onSelect={handleSelectCustomer}
+                    filterOption={false}
+                    autoFocus
+                  >
+                    <input
+                      id="co-mobile"
+                      type="number"
+                      inputMode="numeric"
+                      onWheel={blurOnWheel}
+                      name="customerNumber"
+                      required
+                      placeholder="10-digit mobile"
+                      className="form-control co-input co-input-hero"
+                    />
+                  </AutoComplete>
+                )}
+                {state.customerNumber !== "" && !isMobileValid && <p className="co-error">Mobile number must be 10 digits</p>}
+              </div>
+
+              <div className="co-field co-name">
+                <label className="co-label" htmlFor="co-name">
+                  Name
+                </label>
+                <div className="co-input-row">
                   <input
-                    type="number"
-                    onWheel={(e) => {
-                      e.currentTarget.blur();
-                    }}
-                    name="customerNumber"
-                    required
-                    className="form-control"
+                    id="co-name"
+                    type="text"
+                    name="customerName"
+                    ref={ref2}
+                    className="form-control co-input co-input-tall"
+                    value={state.customerName}
+                    onChange={handleChangeName}
+                    readOnly={isCustomerLocked}
                   />
-                </AutoComplete>
-              )}
-              {state.customerNumber !== "" && !isMobileValid && <small className="text-danger">Mobile number must be 10 digits</small>}
+                  <Button
+                    type="text"
+                    size="large"
+                    icon={<EditOutlined />}
+                    disabled={!customerRecord?.id}
+                    title="Edit customer info"
+                    aria-label="Edit customer info"
+                    onClick={() => setShowEditDrawer(true)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {!isOrderFromDelivery && (
+              <div className="co-field">
+                <span className="co-label" id="co-handover-label">
+                  Delivery
+                </span>
+                <Segmented
+                  block
+                  size="large"
+                  aria-labelledby="co-handover-label"
+                  options={[
+                    { label: "Deliver now", value: "now" },
+                    { label: "Deliver later", value: "later" },
+                  ]}
+                  value={state.isDelivered ? "now" : "later"}
+                  onChange={handleChangeHandover}
+                />
+                <p className="co-hint">
+                  {state.isDelivered ? "Customer takes the items now. Collect the full amount." : "Advance order. Choose when it will be delivered."}
+                </p>
+              </div>
+            )}
+
+            {showSchedule && (
+              <div className="co-field-row">
+                <div className="co-field co-date">
+                  <span className="co-label">Delivery date</span>
+                  <DatePicker onChange={handleChangeDate} value={state.deliveryDate} name="deliveryDate" clearIcon={null} format="dd-MM-y" />
+                </div>
+                <div className="co-field co-time">
+                  <span className="co-label" id="co-time-label">
+                    Delivery time
+                  </span>
+                  <Segmented block size="large" aria-labelledby="co-time-label" options={DELIVERY_TIMES} value={state.deliveryTime} onChange={handleChangeDeliveryTime} />
+                </div>
+              </div>
+            )}
+
+            <div className="co-field">
+              <label className="co-label" htmlFor="co-notes">
+                Notes <span className="co-optional">optional</span>
+              </label>
+              <textarea
+                id="co-notes"
+                name="notes"
+                ref={ref6}
+                rows="3"
+                className="form-control co-input"
+                value={state.notes || ""}
+                onChange={handleChangeNotes}
+                placeholder="e.g. less sugar, gift pack"
+              />
             </div>
           </div>
-          <div className="col-md-6">
-            <div className="form-group">
-              <label>Customer Name</label>
-              <div className="d-flex align-items-center">
-                <input
-                  type="text"
-                  name="customerName"
-                  ref={ref2}
-                  className="form-control"
-                  value={state.customerName}
-                  onChange={handleChangeName}
-                  readOnly={isOrderFromDelivery || isOrderFromEdit ? true : false}
-                />
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  className="ml-2"
-                  disabled={!customerRecord?.id}
-                  title="Edit customer info"
-                  onClick={() => setShowEditDrawer(true)}
-                />
-              </div>
-            </div>
+        </section>
+
+        <aside className="co-panel co-bill" aria-labelledby="co-bill-title">
+          <header className="co-panel-head">
+            <h2 className="co-title" id="co-bill-title">
+              Bill
+            </h2>
+            {!isOrderFromDelivery && (
+              <Link to="/order" className="co-link">
+                <ArrowLeftOutlined /> Add items
+              </Link>
+            )}
+          </header>
+
+          <ul className="bill-items">
+            {items.map((prod) => (
+              <li key={prod.id} className="bill-item">
+                <span className="bill-item-name">{prod.name}</span>
+                <span className="bill-item-amount">{rupees(prod.qty * prod.price)}</span>
+                <span className="bill-item-meta">
+                  {prod.qty} × {rupees(prod.price)}
+                </span>
+              </li>
+            ))}
+            {items.length === 0 && <li className="bill-empty">No items in this order.</li>}
+          </ul>
+
+          <div className="bill-rule" aria-hidden="true" />
+          <div className="bill-line bill-line-total">
+            <span>
+              Total · {itemCount} {itemCount === 1 ? "item" : "items"}
+            </span>
+            <span>{rupees(totAmt)}</span>
           </div>
-          {!isOrderFromDelivery && (
-            <div className="col-md-6">
-              <div className="form-group">
-                <label for="isDelivery"> Delivery </label>
-                <br />
-                <input type="checkbox" value="isDelivered" name="isDelivered" ref={ref3} checked={state.isDelivered} onChange={handleChangeCheckbox} />
-              </div>
+          {paidEarlier > 0 && (
+            <div className="bill-line">
+              <span>Paid earlier</span>
+              <span>− {rupees(paidEarlier)}</span>
             </div>
           )}
-          {!state.isDelivered && !isOrderFromDelivery && (
-            <div className="col-md-6">
-              <div className="form-group">
-                <label>Delivery Date</label>
-                <br />
-                <DatePicker onChange={handleChangeDate} value={state.deliveryDate} name="deliveryDate" className="input-group date" clearIcon={null} />
-              </div>
-            </div>
-          )}
-          {!state.isDelivered && !isOrderFromDelivery && (
-            <div className="col-md-6">
-              <div className="form-group">
-                <label>Delivery time</label>
-                <br />
-                <DropdownButton readOnly={isOrderFromDelivery ? true : false} title={state.deliveryTime} onSelect={handleSelect}>
-                  {options.map((opt, i) => (
-                    <Dropdown.Item key={i} eventKey={i}>
-                      {opt}
-                    </Dropdown.Item>
-                  ))}
-                </DropdownButton>
-              </div>
-            </div>
-          )}
-          {(isOrderFromDelivery || isOrderFromEdit) && (
-            <div className="col-md-6">
-              <div className="form-group">
-                <label> Advance Payment</label>
-                <br />
+
+          {constants.IS_SHOW_DISCOUNT && (
+            <div className="co-field bill-pay">
+              <label className="co-label" htmlFor="co-discount">
+                Discount
+              </label>
+              <div className="co-money">
+                <span className="co-money-prefix">₹</span>
                 <input
+                  id="co-discount"
                   type="number"
-                  onWheel={(e) => {
-                    e.currentTarget.blur();
-                  }}
-                  name="advancePayment"
-                  className="form-control"
-                  value={state.advPayment}
-                  readOnly={true}
+                  inputMode="decimal"
+                  onWheel={blurOnWheel}
+                  name="discount"
+                  className="form-control co-input co-input-money"
+                  value={state.discount}
+                  onChange={handleChangeDiscount}
+                  placeholder="0"
                 />
               </div>
             </div>
           )}
 
-          <div className="col-md-6">
-            <div className="form-group">
-              <label>Payment</label>
-              <input
-                type="number"
-                onWheel={(e) => {
-                  e.currentTarget.blur();
-                }}
-                name="payment"
-                ref={ref4}
-                className="form-control"
-                value={state.payment}
-                onChange={handleChangePayment}
-              />
-            </div>
-          </div>
-          {constants.IS_SHOW_DISCOUNT && (
-            <div className="col-md-6">
-              <div className="form-group">
-                <label>Discount Amount</label>
+          <div className="co-field bill-pay">
+            <label className="co-label" htmlFor="co-payment">
+              Paying now
+            </label>
+            <div className="co-input-row">
+              <div className="co-money">
+                <span className="co-money-prefix">₹</span>
                 <input
+                  id="co-payment"
                   type="number"
-                  onWheel={(e) => {
-                    e.currentTarget.blur();
-                  }}
-                  ref={ref5}
-                  name="discount"
-                  className="form-control"
-                  value={state.discount}
-                  onChange={handleChangeDiscount}
+                  inputMode="decimal"
+                  onWheel={blurOnWheel}
+                  name="payment"
+                  className="form-control co-input co-input-money"
+                  value={state.payment}
+                  onChange={handleChangePayment}
+                  placeholder="0"
                 />
               </div>
-            </div>
-          )}
-          <div className="col-md-6">
-            <div className="form-group">
-              <label>Notes</label>
-              <textarea type="textarea" name="notes" ref={ref6} rows="4" className="form-control" defaultValue={state.notes} onChange={handleChangeNotes} />
+              {amountDue > 0 && payingNow !== amountDue && (
+                <Button size="large" className="bill-full" onClick={() => setState((prev) => ({ ...prev, payment: String(amountDue) }))}>
+                  Full {rupees(amountDue)}
+                </Button>
+              )}
             </div>
           </div>
-          <div className="col-md-6">
-            <div className="form-group">
-              <label>Printer</label>
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="printOnThermal"
-                  checked={printOnThermal}
-                  onChange={(e) => {
-                    printChoiceTouchedRef.current = true;
-                    setPrintOnThermal(e.target.checked);
-                  }}
-                />
-                <label className="form-check-label" htmlFor="printOnThermal">
-                  Thermal printer
-                </label>
-              </div>
-              <small className="text-muted">
-                {printOnThermal ? "Bill prints on the thermal printer." : "Bill opens in the print dialog for this PC's printer."}
-              </small>
-            </div>
-            <div className="form-group">
-              <button className="btn btn-secondary order-action-btn" type="button" onClick={handleCancelOrder} disabled={isSubmitting}>
-                Cancel Order
-              </button>
-              &nbsp;&nbsp;
-              <Button className="order-action-btn" type="primary" htmlType="submit" onClick={handleSubmitOrder} loading={isSubmitting} disabled={isSubmitting || !isMobileValid}>
-                Submit Order
+
+          <div className="bill-rule" aria-hidden="true" />
+          <div className={`bill-balance is-${balanceStatus}`} aria-live="polite">
+            <span className="bill-balance-label">Balance</span>
+            <span className="bill-balance-amount">{rupees(Math.abs(balance))}</span>
+            <span className="bill-balance-hint">{balanceHint}</span>
+          </div>
+
+          <div className="co-field bill-print">
+            <span className="co-label" id="co-print-label">
+              Print on
+            </span>
+            <Segmented
+              block
+              aria-labelledby="co-print-label"
+              options={[
+                { label: "Thermal printer", value: "thermal" },
+                { label: "This PC", value: "pc" },
+              ]}
+              value={printOnThermal ? "thermal" : "pc"}
+              onChange={(value) => {
+                printChoiceTouchedRef.current = true;
+                setPrintOnThermal(value === "thermal");
+              }}
+            />
+          </div>
+
+          <div className="bill-actions">
+            <Button
+              className="bill-submit"
+              type="primary"
+              size="large"
+              block
+              htmlType="submit"
+              onClick={handleSubmitOrder}
+              loading={isSubmitting}
+              disabled={isSubmitting || !isMobileValid}
+            >
+              {payingNow > 0 ? `Submit · collect ${rupees(payingNow)}` : "Submit order"}
+            </Button>
+            {!isMobileValid && <p className="co-hint co-hint-center">Enter the customer's 10-digit mobile number to submit.</p>}
+            <Popconfirm
+              title="Cancel this order?"
+              description="The items in the cart will be cleared."
+              okText="Cancel order"
+              okButtonProps={{ danger: true }}
+              cancelText="Keep order"
+              onConfirm={handleCancelOrder}
+              disabled={isSubmitting}
+            >
+              <Button type="text" block className="bill-cancel" disabled={isSubmitting}>
+                Cancel order
               </Button>
-            </div>
+            </Popconfirm>
           </div>
-        </div>
+        </aside>
       </form>
       <CustomerEditDrawer open={showEditDrawer} customer={customerRecord} onClose={() => setShowEditDrawer(false)} onSaved={handleCustomerSaved} />
-    </div>
+    </ConfigProvider>
   );
 };

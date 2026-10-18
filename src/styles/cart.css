@@ -1,17 +1,475 @@
-.total{
- text-align: right;
- font-weight:500;
- font-size: large;
+/* Cart — "bill pad" checkout.
+   Same system as the delivery search (delivery.css): borders-only depth,
+   8px grid, one blue accent. The bill panel echoes the printed thermal slip:
+   dashed rules, tabular rupee amounts, and the balance as the focal figure. */
+
+.checkout {
+    --bill-ink: #1f2933;
+    --bill-muted: #6b7785;
+    --bill-faint: #9aa5b1;
+    --bill-line: rgba(31, 41, 51, 0.12);
+    --bill-line-strong: rgba(31, 41, 51, 0.24);
+    --bill-field: #f6f8fa;
+    --bill-accent: #0d6efd;
+    --bill-accent-soft: rgba(13, 110, 253, 0.12);
+    --bill-paid: #1a7f37;
+    --bill-short: #9a6700;
+    --bill-over: #cf222e;
+    --bill-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+    gap: 16px;
+    align-items: start;
+    color: var(--bill-ink);
 }
 
-.order-action-btn.btn,
-.order-action-btn.ant-btn {
-  height: 38px;
-  padding-top: 0;
-  padding-bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
+/* Panels */
+.co-panel {
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--bill-line);
+    border-radius: 12px;
 }
 
+.co-bill {
+    position: sticky;
+    top: 16px;
+}
 
+.co-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--bill-line);
+}
+
+.co-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--bill-ink);
+}
+
+.co-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--bill-accent);
+}
+
+.co-link:hover {
+    color: var(--bill-accent);
+    text-decoration: underline;
+}
+
+.co-panel-body {
+    display: grid;
+    gap: 24px;
+    padding: 24px;
+}
+
+/* Fields */
+.co-field {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.checkout .co-label,
+.checkout label.co-label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--bill-muted);
+}
+
+.co-optional {
+    margin-left: 4px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--bill-faint);
+}
+
+.co-hint,
+.co-error {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--bill-muted);
+}
+
+.co-error {
+    color: var(--bill-over);
+}
+
+.co-hint-center {
+    text-align: center;
+}
+
+.co-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.co-input-row > .co-input,
+.co-input-row > .co-money {
+    flex: 1;
+    min-width: 0;
+}
+
+.co-field-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+}
+
+.co-mobile {
+    flex: 1 1 220px;
+}
+
+.co-name {
+    flex: 1.4 1 260px;
+}
+
+.co-date {
+    flex: 0 1 220px;
+}
+
+.co-time {
+    flex: 1 1 340px;
+}
+
+/* Inputs are inset: a shade darker than the panel, white with a ring on focus. */
+.checkout .co-input {
+    height: 44px;
+    padding: 0 12px;
+    font-size: 16px;
+    color: var(--bill-ink);
+    background: var(--bill-field);
+    border: 1px solid var(--bill-line-strong);
+    border-radius: 8px;
+    box-shadow: none;
+    transition: border-color 150ms var(--bill-ease), box-shadow 150ms var(--bill-ease), background-color 150ms var(--bill-ease);
+}
+
+.checkout textarea.co-input {
+    height: auto;
+    min-height: 88px;
+    padding: 10px 12px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.checkout .co-input::placeholder {
+    color: var(--bill-faint);
+}
+
+.checkout .co-input:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--bill-accent);
+    box-shadow: 0 0 0 3px var(--bill-accent-soft);
+}
+
+/* Customer already chosen (delivering / editing an order): read, don't edit. */
+.checkout .co-input[readonly] {
+    background: transparent;
+    border-style: dashed;
+    color: var(--bill-ink);
+}
+
+.checkout .co-input[readonly]:focus {
+    border-color: var(--bill-line-strong);
+    box-shadow: none;
+}
+
+/* The mobile number is the first thing the cashier types. */
+.checkout .co-input-hero {
+    height: 52px;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Name sits beside the mobile number, so it matches its height. */
+.checkout .co-input-tall {
+    height: 52px;
+    font-size: 18px;
+}
+
+.checkout input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.checkout input[type="number"]::-webkit-outer-spin-button,
+.checkout input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.co-money {
+    position: relative;
+}
+
+.co-money-prefix {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--bill-muted);
+    pointer-events: none;
+}
+
+.checkout .co-input-money {
+    height: 52px;
+    padding-left: 34px;
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Delivery date picker, matched to the inputs */
+.checkout .react-date-picker {
+    width: 100%;
+}
+
+.checkout .react-date-picker__wrapper {
+    height: 44px;
+    padding: 0 4px 0 12px;
+    background: var(--bill-field);
+    border: 1px solid var(--bill-line-strong);
+    border-radius: 8px;
+    transition: border-color 150ms var(--bill-ease), box-shadow 150ms var(--bill-ease), background-color 150ms var(--bill-ease);
+}
+
+.checkout .react-date-picker--open .react-date-picker__wrapper,
+.checkout .react-date-picker__wrapper:focus-within {
+    background: #fff;
+    border-color: var(--bill-accent);
+    box-shadow: 0 0 0 3px var(--bill-accent-soft);
+}
+
+.checkout .react-date-picker__inputGroup {
+    font-size: 16px;
+    color: var(--bill-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.checkout .react-date-picker__inputGroup__input:invalid {
+    background: transparent;
+}
+
+.checkout .react-date-picker__button svg {
+    stroke: var(--bill-muted);
+}
+
+.checkout .react-date-picker__calendar {
+    z-index: 10;
+}
+
+/* Bill */
+.bill-items {
+    max-height: 40vh;
+    margin: 0;
+    padding: 12px 24px;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.bill-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 16px;
+    row-gap: 2px;
+    padding: 8px 0;
+}
+
+.bill-item-name {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.bill-item-amount {
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.bill-item-meta {
+    grid-column: 1;
+    font-size: 13px;
+    color: var(--bill-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.bill-empty {
+    padding: 16px 0;
+    font-size: 14px;
+    color: var(--bill-muted);
+}
+
+/* Dashed rule, like the printed slip */
+.bill-rule {
+    margin: 0 24px;
+    border-top: 2px dashed var(--bill-line-strong);
+}
+
+.bill-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 24px;
+    font-size: 14px;
+    color: var(--bill-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.bill-line-total {
+    padding-top: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--bill-ink);
+}
+
+.bill-pay {
+    padding: 16px 24px 20px;
+}
+
+.checkout .bill-full {
+    height: 52px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.bill-balance {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    row-gap: 4px;
+    padding: 16px 24px 20px;
+}
+
+.bill-balance-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--bill-muted);
+}
+
+.bill-balance-amount {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--bill-ink);
+    font-variant-numeric: tabular-nums;
+    transition: color 150ms var(--bill-ease);
+}
+
+.bill-balance-hint {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    color: var(--bill-muted);
+}
+
+.bill-balance.is-paid .bill-balance-amount,
+.bill-balance.is-paid .bill-balance-hint {
+    color: var(--bill-paid);
+}
+
+.bill-balance.is-short .bill-balance-amount,
+.bill-balance.is-short .bill-balance-hint {
+    color: var(--bill-short);
+}
+
+.bill-balance.is-over .bill-balance-amount,
+.bill-balance.is-over .bill-balance-hint {
+    color: var(--bill-over);
+}
+
+.bill-print {
+    padding: 0 24px 16px;
+}
+
+.bill-actions {
+    display: grid;
+    gap: 8px;
+    padding: 0 24px 24px;
+}
+
+.checkout .bill-submit {
+    height: 52px;
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    transition: transform 120ms var(--bill-ease), background-color 150ms var(--bill-ease), opacity 150ms var(--bill-ease);
+}
+
+.checkout .bill-submit:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.checkout .bill-cancel {
+    color: var(--bill-muted);
+}
+
+/* Below ~1200px the 250px sidebar leaves too little room for two columns:
+   stack the bill under the customer details. */
+@media (max-width: 1199.98px) {
+    .checkout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .co-bill {
+        position: static;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .co-panel-head,
+    .co-panel-body {
+        padding: 16px;
+    }
+
+    .bill-items,
+    .bill-line,
+    .bill-pay,
+    .bill-balance,
+    .bill-print,
+    .bill-actions {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .bill-rule {
+        margin: 0 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .checkout .co-input,
+    .checkout .react-date-picker__wrapper,
+    .checkout .bill-submit {
+        transition: none;
+    }
+
+    .checkout .bill-submit:active:not(:disabled) {
+        transform: none;
+    }
+}

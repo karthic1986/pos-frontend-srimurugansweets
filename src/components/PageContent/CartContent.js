@@ -1,6 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import CartTable from "../CartTable";
 import { CartForm } from "../CartForm";
 import { useStoreState } from "../../reducers/productReducer";
 import { useStoreState as useStoreStateDelivery, dispatch as dispatchDelivery } from "../../reducers/deliveryReducer";
@@ -125,20 +123,26 @@ const CartContent = () => {
       });
   };
 
+  const pageTitle = isOrderFromDelivery
+    ? `Deliver order #${orderFromDelivery?.id}`
+    : isOrderFromEdit
+    ? `Edit order #${orderFromDelivery?.id}`
+    : "New order";
+
   return (
     <div className="content-wrapper">
       <section className="content-header">
         <div className="container-fluid">
           <div className="row mb-2">
             <div className="col-sm-6">
-              <h1>Cart</h1>
+              <h1>{pageTitle}</h1>
             </div>
             <div className="col-sm-6">
               <ol className="breadcrumb float-sm-right">
                 <li className="breadcrumb-item">
-                  <a href="#">Home</a>
+                  <a href="/dashboard">Home</a>
                 </li>
-                <li className="breadcrumb-item active">Cart</li>
+                <li className="breadcrumb-item active">{pageTitle}</li>
               </ol>
             </div>
           </div>
@@ -146,48 +150,7 @@ const CartContent = () => {
       </section>
 
       <section className="content">
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">
-              {isOrderFromDelivery != true && (
-                <Link to={"/order"}>
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-arrow-left"></i>
-                  </button>
-                </Link>
-              )}
-              Order Summary
-            </h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                <i class="fas fa-minus"></i>
-              </button>
-            </div>
-          </div>
-          <div className="card-body">
-            <CartTable prodList={productList} />
-          </div>
-          <div className="row">
-            <div className="col total">Total Quantity: {totalQty}</div>
-            <div className="col total">Total Amount: ₹{totalAmount}</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="content">
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Customer Details</h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                <i class="fas fa-minus"></i>
-              </button>
-            </div>
-          </div>
-          <div className="card-body">
-            <CartForm createOrder={createOrder} prodList={productList} />
-          </div>
-        </div>
+        <CartForm createOrder={createOrder} prodList={productList} />
       </section>
     </div>
   );
