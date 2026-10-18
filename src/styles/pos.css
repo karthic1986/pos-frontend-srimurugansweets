@@ -1,0 +1,18 @@
+/* Counter (POS) design tokens, shared by the Order (shelf + ticket) and Cart
+   (bill pad) screens. Borders-only depth, 8px grid, one blue accent; money
+   colours are only used for payment state. Matches delivery.css. */
+:root {
+    --pos-ink: #1f2933;
+    --pos-muted: #6b7785;
+    --pos-faint: #9aa5b1;
+    --pos-line: rgba(31, 41, 51, 0.12);
+    --pos-line-strong: rgba(31, 41, 51, 0.24);
+    --pos-field: #f6f8fa;
+    --pos-accent: #0d6efd;
+    --pos-accent-soft: rgba(13, 110, 253, 0.08);
+    --pos-accent-ring: rgba(13, 110, 253, 0.12);
+    --pos-paid: #1a7f37;
+    --pos-short: #9a6700;
+    --pos-over: #cf222e;
+    --pos-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}

@@ -1,36 +1,540 @@
-.order-product-scroll {
-    max-height: 60vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+/* Order — "shelf + ticket". Tokens live in pos.css (shared with the Cart bill
+   pad). The shelf is the product grid; the ticket is the running order, styled
+   like the printed slip (dashed rule, tabular rupees). Accent blue means one
+   thing here: "in this order" (tile outline, primary action). Filters use ink. */
+
+/* Desktop: a counter workspace that fills the window below the page header
+   (--pos-order-top is measured in OrderContent). The shelf grid and the
+   ticket's item list each scroll on their own; search, total and Checkout
+   never move. */
+.pos-order {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    gap: 16px;
+    height: calc(100vh - var(--pos-order-top, 160px) - 16px);
+    min-height: 480px;
+    color: var(--pos-ink);
 }
 
-.order-product-footer {
+.pos-panel {
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--pos-line);
+    border-radius: 12px;
+}
+
+.pos-shelf,
+.pos-ticket {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Shelf: search + categories stay put while the grid scrolls */
+.pos-shelf-head {
+    flex: none;
+    display: grid;
     gap: 12px;
+    padding: 16px 24px 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--pos-line);
+    border-radius: 12px 12px 0 0;
 }
 
-.order-product-footer::after {
-    display: none;
-}
-
-.order-product-totals {
+.pos-toolbar {
     display: flex;
-    gap: 24px;
-    font-weight: 500;
+    gap: 8px;
 }
 
-.order-category-tags {
+.pos-toolbar .ant-input-affix-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.pos-search-icon {
+    margin-right: 4px;
+    color: var(--pos-muted);
+}
+
+.pos-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #dee2e6;
 }
 
-.category-tag {
-    padding-left: 14px;
-    padding-right: 14px;
+.pos-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--pos-ink);
+    background: #fff;
+    border: 1px solid var(--pos-line-strong);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 150ms var(--pos-ease), border-color 150ms var(--pos-ease), color 150ms var(--pos-ease);
+}
+
+.pos-chip:hover {
+    background: var(--pos-field);
+}
+
+.pos-chip[aria-pressed="true"] {
+    color: #fff;
+    background: var(--pos-ink);
+    border-color: var(--pos-ink);
+}
+
+.pos-chip:focus-visible {
+    outline: 2px solid var(--pos-accent);
+    outline-offset: 2px;
+}
+
+.pos-chip-count {
+    font-size: 12px;
+    color: var(--pos-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pos-chip[aria-pressed="true"] .pos-chip-count {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.pos-shelf-meta {
+    margin: 0;
+    font-size: 13px;
+    color: var(--pos-muted);
+}
+
+.pos-shelf-body {
+    flex: 1;
+    min-height: 0;
+    padding: 16px 24px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+/* Product tile: the whole top area is one big "add one" button */
+.pos-tile {
+    display: flex;
+    flex-direction: column;
+    min-height: 104px;
+    background: #fff;
+    border: 1px solid var(--pos-line-strong);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 150ms var(--pos-ease), box-shadow 150ms var(--pos-ease);
+}
+
+.pos-tile:hover {
+    border-color: rgba(31, 41, 51, 0.4);
+}
+
+.pos-tile.is-in-order {
+    border-color: var(--pos-accent);
+    box-shadow: inset 0 0 0 1px var(--pos-accent);
+}
+
+.pos-tile-add {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    color: inherit;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+/* Tapped many times an hour: instant feedback, no animation. */
+.pos-tile-add:active {
+    background: var(--pos-accent-soft);
+}
+
+.pos-tile-add:focus-visible {
+    outline: 2px solid var(--pos-accent);
+    outline-offset: -2px;
+}
+
+.pos-tile-name {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.pos-tile-price {
+    font-size: 14px;
+    color: var(--pos-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pos-tile.is-in-order .pos-tile-price {
+    font-weight: 600;
+    color: var(--pos-accent);
+}
+
+.pos-tile-foot {
+    padding: 0 8px 8px;
+}
+
+.pos-tile-foot .pos-stepper {
+    width: 100%;
+}
+
+.pos-tile-foot .pos-step-qty {
+    flex: 1;
+}
+
+.pos-tile-skeleton {
+    background: var(--pos-field);
+    border-color: var(--pos-line);
+}
+
+/* − qty + stepper (tiles and ticket) */
+.pos-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    height: 40px;
+    background: #fff;
+    border: 1px solid var(--pos-line-strong);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.pos-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    padding: 0;
+    font-size: 14px;
+    color: var(--pos-ink);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.pos-step:hover {
+    background: var(--pos-field);
+}
+
+.pos-step:active {
+    background: var(--pos-accent-soft);
+}
+
+.pos-step:focus-visible {
+    outline: 2px solid var(--pos-accent);
+    outline-offset: -2px;
+}
+
+.pos-step-qty {
+    width: 48px;
+    min-width: 0;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--pos-ink);
+    text-align: center;
+    background: transparent;
+    border: 0;
+    border-left: 1px solid var(--pos-line);
+    border-right: 1px solid var(--pos-line);
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+}
+
+.pos-step-qty::-webkit-outer-spin-button,
+.pos-step-qty::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.pos-step-qty:focus {
+    outline: none;
+    background: var(--pos-accent-soft);
+}
+
+.pos-stepper-sm {
+    height: 36px;
+}
+
+.pos-stepper-sm .pos-step {
+    width: 36px;
+}
+
+.pos-stepper-sm .pos-step-qty {
+    width: 44px;
+    font-size: 15px;
+}
+
+/* Ticket: the running order. Only the item list scrolls. */
+.pos-ticket-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--pos-line);
+}
+
+.pos-ticket-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.pos-order .pos-ticket-clear {
+    color: var(--pos-muted);
+}
+
+.pos-ticket-items {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    padding: 4px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+}
+
+.pos-ticket-empty {
+    flex: 1 1 auto;
+}
+
+.pos-rule,
+.pos-ticket-total,
+.pos-ticket-actions {
+    flex: none;
+}
+
+.pos-ticket-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 0;
+}
+
+.pos-ticket-item + .pos-ticket-item {
+    border-top: 1px solid var(--pos-line);
+}
+
+.pos-ticket-name {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.pos-ticket-amount {
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.pos-ticket-qty {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pos-ticket-each {
+    font-size: 13px;
+    color: var(--pos-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Dashed rule, like the printed slip */
+.pos-rule {
+    margin: 0 24px;
+    border-top: 2px dashed var(--pos-line-strong);
+}
+
+.pos-ticket-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px 8px;
+}
+
+.pos-ticket-total-label {
+    font-size: 14px;
+    color: var(--pos-muted);
+}
+
+.pos-ticket-total-amount {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.pos-ticket-actions {
+    padding: 8px 24px 24px;
+}
+
+.pos-order .pos-checkout {
+    height: 52px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.pos-order .pos-checkout .anticon {
+    transition: transform 150ms var(--pos-ease);
+}
+
+.pos-order .pos-checkout:hover:not(:disabled) .anticon {
+    transform: translateX(2px);
+}
+
+/* Empty states */
+.pos-empty,
+.pos-ticket-empty {
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.pos-ticket-empty {
+    padding: 40px 24px;
+}
+
+.pos-empty-icon {
+    font-size: 28px;
+    color: var(--pos-faint);
+}
+
+.pos-empty-title {
+    margin: 12px 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.pos-empty-text {
+    margin: 0;
+    font-size: 14px;
+    color: var(--pos-muted);
+}
+
+/* Narrow: no room for the ticket beside the shelf (250px sidebar), so a bar
+   with the total and Checkout floats at the bottom of the screen instead. */
+.pos-bar {
+    display: none;
+}
+
+@media (max-width: 1199.98px) {
+    /* The page scrolls normally here; search + categories stick to the top. */
+    .pos-order {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        height: auto;
+        min-height: 0;
+    }
+
+    .pos-shelf-head {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+    }
+
+    .pos-shelf-body {
+        overflow: visible;
+    }
+
+    .pos-ticket {
+        display: none;
+    }
+
+    .pos-bar {
+        position: sticky;
+        bottom: 12px;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 12px 12px 20px;
+        background: #fff;
+        border: 1px solid var(--pos-line-strong);
+        border-radius: 12px;
+        /* Floats over the grid, so it needs lift to read as on top. */
+        box-shadow: 0 8px 24px rgba(31, 41, 51, 0.12);
+    }
+
+    .pos-bar-summary {
+        display: grid;
+    }
+
+    .pos-bar-count {
+        font-size: 13px;
+        color: var(--pos-muted);
+    }
+
+    .pos-bar-amount {
+        font-size: 22px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .pos-order .pos-bar .pos-checkout {
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pos-shelf-head {
+        padding: 12px 16px;
+    }
+
+    .pos-shelf-body {
+        padding: 12px 16px 16px;
+    }
+
+    .pos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+    }
+
+    .pos-btn-label {
+        display: none;
+    }
+
+    .pos-order .pos-bar .pos-checkout {
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pos-chip,
+    .pos-tile,
+    .pos-order .pos-checkout .anticon {
+        transition: none;
+    }
+
+    .pos-order .pos-checkout:hover:not(:disabled) .anticon {
+        transform: none;
+    }
 }

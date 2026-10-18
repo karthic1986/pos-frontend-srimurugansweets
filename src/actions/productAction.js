@@ -2,6 +2,7 @@ import {GET_ENTIRE_PRODUCTS,GET_ACTIVE_PRODUCTS, ADD_PRODUCT, EDIT_PRODUCT, DELE
 import axios from "axios";
 import constants from "../constants";
 import { dispatch } from '../reducers/productReducer';
+import CustomToast from "../components/CustomToast";
 
 
 
@@ -15,8 +16,9 @@ export const getEntireProductsSvc = async () =>{
 };
 
 
+// Loads active products into the store; the returned promise settles when done.
 export const getActiveProductsSvc = () =>{
-  axios.get(constants.MIDDLEWARE_GET_ACTIVE_PRODUCTS_URL, {
+  return axios.get(constants.MIDDLEWARE_GET_ACTIVE_PRODUCTS_URL, {
    auth: {
      username: constants.MIDDLEWARE_USERNAME,
      password: constants.MIDDLEWARE_PASSWORD,

@@ -1,34 +1,20 @@
-/* Cart — "bill pad" checkout.
-   Same system as the delivery search (delivery.css): borders-only depth,
-   8px grid, one blue accent. The bill panel echoes the printed thermal slip:
-   dashed rules, tabular rupee amounts, and the balance as the focal figure. */
+/* Cart — "bill pad" checkout. Tokens live in pos.css (shared with the Order
+   screen). The bill panel echoes the printed thermal slip: dashed rules,
+   tabular rupee amounts, and the balance as the focal figure. */
 
 .checkout {
-    --bill-ink: #1f2933;
-    --bill-muted: #6b7785;
-    --bill-faint: #9aa5b1;
-    --bill-line: rgba(31, 41, 51, 0.12);
-    --bill-line-strong: rgba(31, 41, 51, 0.24);
-    --bill-field: #f6f8fa;
-    --bill-accent: #0d6efd;
-    --bill-accent-soft: rgba(13, 110, 253, 0.12);
-    --bill-paid: #1a7f37;
-    --bill-short: #9a6700;
-    --bill-over: #cf222e;
-    --bill-ease: cubic-bezier(0.23, 1, 0.32, 1);
-
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
     gap: 16px;
     align-items: start;
-    color: var(--bill-ink);
+    color: var(--pos-ink);
 }
 
 /* Panels */
 .co-panel {
     min-width: 0;
     background: #fff;
-    border: 1px solid var(--bill-line);
+    border: 1px solid var(--pos-line);
     border-radius: 12px;
 }
 
@@ -43,7 +29,7 @@
     justify-content: space-between;
     gap: 16px;
     padding: 16px 24px;
-    border-bottom: 1px solid var(--bill-line);
+    border-bottom: 1px solid var(--pos-line);
 }
 
 .co-title {
@@ -51,7 +37,7 @@
     font-size: 18px;
     font-weight: 600;
     letter-spacing: -0.01em;
-    color: var(--bill-ink);
+    color: var(--pos-ink);
 }
 
 .co-link {
@@ -60,11 +46,11 @@
     gap: 6px;
     font-size: 14px;
     font-weight: 500;
-    color: var(--bill-accent);
+    color: var(--pos-accent);
 }
 
 .co-link:hover {
-    color: var(--bill-accent);
+    color: var(--pos-accent);
     text-decoration: underline;
 }
 
@@ -88,7 +74,7 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
 }
 
 .co-optional {
@@ -96,7 +82,7 @@
     font-weight: 400;
     letter-spacing: 0;
     text-transform: none;
-    color: var(--bill-faint);
+    color: var(--pos-faint);
 }
 
 .co-hint,
@@ -104,11 +90,11 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.4;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
 }
 
 .co-error {
-    color: var(--bill-over);
+    color: var(--pos-over);
 }
 
 .co-hint-center {
@@ -154,12 +140,12 @@
     height: 44px;
     padding: 0 12px;
     font-size: 16px;
-    color: var(--bill-ink);
-    background: var(--bill-field);
-    border: 1px solid var(--bill-line-strong);
+    color: var(--pos-ink);
+    background: var(--pos-field);
+    border: 1px solid var(--pos-line-strong);
     border-radius: 8px;
     box-shadow: none;
-    transition: border-color 150ms var(--bill-ease), box-shadow 150ms var(--bill-ease), background-color 150ms var(--bill-ease);
+    transition: border-color 150ms var(--pos-ease), box-shadow 150ms var(--pos-ease), background-color 150ms var(--pos-ease);
 }
 
 .checkout textarea.co-input {
@@ -171,25 +157,25 @@
 }
 
 .checkout .co-input::placeholder {
-    color: var(--bill-faint);
+    color: var(--pos-faint);
 }
 
 .checkout .co-input:focus {
     outline: none;
     background: #fff;
-    border-color: var(--bill-accent);
-    box-shadow: 0 0 0 3px var(--bill-accent-soft);
+    border-color: var(--pos-accent);
+    box-shadow: 0 0 0 3px var(--pos-accent-ring);
 }
 
 /* Customer already chosen (delivering / editing an order): read, don't edit. */
 .checkout .co-input[readonly] {
     background: transparent;
     border-style: dashed;
-    color: var(--bill-ink);
+    color: var(--pos-ink);
 }
 
 .checkout .co-input[readonly]:focus {
-    border-color: var(--bill-line-strong);
+    border-color: var(--pos-line-strong);
     box-shadow: none;
 }
 
@@ -228,7 +214,7 @@
     left: 14px;
     transform: translateY(-50%);
     font-size: 18px;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
     pointer-events: none;
 }
 
@@ -248,22 +234,22 @@
 .checkout .react-date-picker__wrapper {
     height: 44px;
     padding: 0 4px 0 12px;
-    background: var(--bill-field);
-    border: 1px solid var(--bill-line-strong);
+    background: var(--pos-field);
+    border: 1px solid var(--pos-line-strong);
     border-radius: 8px;
-    transition: border-color 150ms var(--bill-ease), box-shadow 150ms var(--bill-ease), background-color 150ms var(--bill-ease);
+    transition: border-color 150ms var(--pos-ease), box-shadow 150ms var(--pos-ease), background-color 150ms var(--pos-ease);
 }
 
 .checkout .react-date-picker--open .react-date-picker__wrapper,
 .checkout .react-date-picker__wrapper:focus-within {
     background: #fff;
-    border-color: var(--bill-accent);
-    box-shadow: 0 0 0 3px var(--bill-accent-soft);
+    border-color: var(--pos-accent);
+    box-shadow: 0 0 0 3px var(--pos-accent-ring);
 }
 
 .checkout .react-date-picker__inputGroup {
     font-size: 16px;
-    color: var(--bill-ink);
+    color: var(--pos-ink);
     font-variant-numeric: tabular-nums;
 }
 
@@ -272,7 +258,7 @@
 }
 
 .checkout .react-date-picker__button svg {
-    stroke: var(--bill-muted);
+    stroke: var(--pos-muted);
 }
 
 .checkout .react-date-picker__calendar {
@@ -313,20 +299,20 @@
 .bill-item-meta {
     grid-column: 1;
     font-size: 13px;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
     font-variant-numeric: tabular-nums;
 }
 
 .bill-empty {
     padding: 16px 0;
     font-size: 14px;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
 }
 
 /* Dashed rule, like the printed slip */
 .bill-rule {
     margin: 0 24px;
-    border-top: 2px dashed var(--bill-line-strong);
+    border-top: 2px dashed var(--pos-line-strong);
 }
 
 .bill-line {
@@ -335,7 +321,7 @@
     gap: 16px;
     padding: 4px 24px;
     font-size: 14px;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
     font-variant-numeric: tabular-nums;
 }
 
@@ -343,7 +329,7 @@
     padding-top: 16px;
     font-size: 16px;
     font-weight: 600;
-    color: var(--bill-ink);
+    color: var(--pos-ink);
 }
 
 .bill-pay {
@@ -369,7 +355,7 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
 }
 
 .bill-balance-amount {
@@ -377,30 +363,30 @@
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.02em;
-    color: var(--bill-ink);
+    color: var(--pos-ink);
     font-variant-numeric: tabular-nums;
-    transition: color 150ms var(--bill-ease);
+    transition: color 150ms var(--pos-ease);
 }
 
 .bill-balance-hint {
     grid-column: 1 / -1;
     font-size: 13px;
-    color: var(--bill-muted);
+    color: var(--pos-muted);
 }
 
 .bill-balance.is-paid .bill-balance-amount,
 .bill-balance.is-paid .bill-balance-hint {
-    color: var(--bill-paid);
+    color: var(--pos-paid);
 }
 
 .bill-balance.is-short .bill-balance-amount,
 .bill-balance.is-short .bill-balance-hint {
-    color: var(--bill-short);
+    color: var(--pos-short);
 }
 
 .bill-balance.is-over .bill-balance-amount,
 .bill-balance.is-over .bill-balance-hint {
-    color: var(--bill-over);
+    color: var(--pos-over);
 }
 
 .bill-print {
@@ -418,15 +404,34 @@
     font-size: 16px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    transition: transform 120ms var(--bill-ease), background-color 150ms var(--bill-ease), opacity 150ms var(--bill-ease);
+    transition: transform 120ms var(--pos-ease), background-color 150ms var(--pos-ease), opacity 150ms var(--pos-ease);
 }
 
 .checkout .bill-submit:active:not(:disabled) {
     transform: scale(0.97);
 }
 
+/* Focus arrives here from Enter in Paying now; make "ready to submit" obvious. */
+.checkout .bill-submit:focus-visible {
+    outline: 2px solid var(--pos-accent);
+    outline-offset: 3px;
+}
+
+.co-hint-key kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pos-ink);
+    background: var(--pos-field);
+    border: 1px solid var(--pos-line-strong);
+    border-radius: 4px;
+    box-shadow: none;
+}
+
 .checkout .bill-cancel {
-    color: var(--bill-muted);
+    color: var(--pos-muted);
 }
 
 /* Below ~1200px the 250px sidebar leaves too little room for two columns:

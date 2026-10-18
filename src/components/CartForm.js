@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import DatePicker from "react-date-picker";
+import "../styles/pos.css";
 import "../styles/cart.css";
+import POS_THEME from "../styles/posTheme";
 import { useStoreState as useStoreStateDelivery } from "../reducers/deliveryReducer";
 import CustomToast from "./CustomToast";
 import { Button, AutoComplete, Segmented, Popconfirm, ConfigProvider } from "antd";
@@ -13,17 +15,12 @@ import constants from "../constants";
 import { searchCustomersByMobileSvc } from "../actions/customerAction";
 import CustomerEditDrawer from "./CustomerEditDrawer";
 import { getAppSettingsMap, isThermalPrintEnabled } from "../actions/appSettingAction";
-
-// antd controls on this screen use the bill pad's accent and radius (cart.css).
-const CHECKOUT_THEME = { token: { colorPrimary: "#0d6efd", borderRadius: 8, fontFamily: "inherit" } };
+import { toNumber, rupees } from "../money";
 
 const DELIVERY_TIMES = ["Morning", "Afternoon", "Evening", "Night"];
 
-const toNumber = (value) => Number(value) || 0;
 // Round to paise so fractional prices can't leave a stray 0.0000001 balance.
 const toPaise = (value) => Math.round(value * 100) / 100;
-// Indian digit grouping, e.g. ₹1,23,456
-const rupees = (value) => `₹${toNumber(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
 const blurOnWheel = (e) => e.currentTarget.blur();
 
@@ -43,6 +40,10 @@ export const CartForm = (props) => {
   const lastSearchedMobileRef = useRef("");
   const [customerRecord, setCustomerRecord] = useState(() => (isOrderFromDelivery || isOrderFromEdit ? customerFromDelivery : null));
   const [showEditDrawer, setShowEditDrawer] = useState(false);
+  // Keyboard flow: customer → Paying now → Submit order → Enter saves and prints.
+  const paymentRef = useRef(null);
+  const submitRef = useRef(null);
+  const [isSubmitFocused, setIsSubmitFocused] = useState(false);
   // Thermal printer or this PC's printer (print dialog). Defaults to the
   // thermal printer unless the THERMAL_PRINT_ENABLED setting is "false".
   const [printOnThermal, setPrintOnThermal] = useState(true);
@@ -156,6 +157,41 @@ export const CartForm = (props) => {
       customerName: option.customer.name,
     }));
     setCustomerRecord(option.customer);
+    focusPayment();
+  };
+
+  // Deferred so it runs after the autocomplete has finished handling its own
+  // selection and focus. Selecting lets the cashier type over a prefilled amount.
+  const focusPayment = () => {
+    setTimeout(() => {
+      paymentRef.current?.focus();
+      paymentRef.current?.select();
+    }, 0);
+  };
+
+  // Enter moves between fields instead of submitting the form; only Enter on
+  // the Submit order button itself saves and prints.
+  const handleFormKeyDown = (e) => {
+    if (e.key === "Enter" && e.target.tagName === "INPUT") e.preventDefault();
+  };
+
+  const handleMobileKeyDown = (e) => {
+    // With a matching customer in the list, Enter picks it (handleSelectCustomer
+    // then moves on); otherwise a new customer's name comes next.
+    if (e.key === "Enter" && isMobileValid && customerOptions.length === 0) {
+      setTimeout(() => ref2.current?.focus(), 0);
+    }
+  };
+
+  const handleNameKeyDown = (e) => {
+    if (e.key === "Enter") focusPayment();
+  };
+
+  const handlePaymentKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    // Submit stays disabled until the mobile number is valid, so go back there.
+    if (isMobileValid) submitRef.current?.focus();
+    else document.getElementById("co-mobile")?.focus();
   };
 
   const handleCustomerSaved = (updatedCustomer) => {
@@ -326,8 +362,8 @@ export const CartForm = (props) => {
   const showSchedule = !state.isDelivered && !isOrderFromDelivery;
 
   return (
-    <ConfigProvider theme={CHECKOUT_THEME}>
-      <form className="checkout" onSubmit={handleSubmit}>
+    <ConfigProvider theme={POS_THEME}>
+      <form className="checkout" onSubmit={handleSubmit} onKeyDown={handleFormKeyDown}>
         <section className="co-panel" aria-labelledby="co-customer-title">
           <header className="co-panel-head">
             <h2 className="co-title" id="co-customer-title">
@@ -362,6 +398,7 @@ export const CartForm = (props) => {
                       name="customerNumber"
                       required
                       placeholder="10-digit mobile"
+                      onKeyDown={handleMobileKeyDown}
                       className="form-control co-input co-input-hero"
                     />
                   </AutoComplete>
@@ -382,6 +419,7 @@ export const CartForm = (props) => {
                     className="form-control co-input co-input-tall"
                     value={state.customerName}
                     onChange={handleChangeName}
+                    onKeyDown={handleNameKeyDown}
                     readOnly={isCustomerLocked}
                   />
                   <Button
@@ -500,6 +538,7 @@ export const CartForm = (props) => {
                 <span className="co-money-prefix">₹</span>
                 <input
                   id="co-discount"
+                  onKeyDown={(e) => e.key === "Enter" && focusPayment()}
                   type="number"
                   inputMode="decimal"
                   onWheel={blurOnWheel}
@@ -522,6 +561,8 @@ export const CartForm = (props) => {
                 <span className="co-money-prefix">₹</span>
                 <input
                   id="co-payment"
+                  ref={paymentRef}
+                  onKeyDown={handlePaymentKeyDown}
                   type="number"
                   inputMode="decimal"
                   onWheel={blurOnWheel}
@@ -568,7 +609,10 @@ export const CartForm = (props) => {
 
           <div className="bill-actions">
             <Button
+              ref={submitRef}
               className="bill-submit"
+              onFocus={() => setIsSubmitFocused(true)}
+              onBlur={() => setIsSubmitFocused(false)}
               type="primary"
               size="large"
               block
@@ -580,6 +624,11 @@ export const CartForm = (props) => {
               {payingNow > 0 ? `Submit · collect ${rupees(payingNow)}` : "Submit order"}
             </Button>
             {!isMobileValid && <p className="co-hint co-hint-center">Enter the customer's 10-digit mobile number to submit.</p>}
+            {isMobileValid && isSubmitFocused && !isSubmitting && (
+              <p className="co-hint co-hint-center co-hint-key">
+                Press <kbd>Enter</kbd> to save and print
+              </p>
+            )}
             <Popconfirm
               title="Cancel this order?"
               description="The items in the cart will be cleared."

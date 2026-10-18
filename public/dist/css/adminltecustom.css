@@ -2,6 +2,39 @@
     color: white;
   }
 
+/* Page titles in the content header ("New order", "Products", ...): smaller
+   than AdminLTE's 1.8rem, still above the 18px panel titles. The breadcrumb
+   gets the same line-height so the two stay aligned. */
+.content-header h1 {
+    font-size: 1.375rem;
+    line-height: 2rem;
+}
+
+.content-header .breadcrumb {
+    line-height: 2rem;
+}
+
+/* Compact content header (~56px instead of ~100px). The title row was padded
+   by AdminLTE (15px), by delivery.css's global ".row { padding: 15px }" and by
+   .mb-2; keep only 12px above and below. Dropping the container's side padding
+   lines the title and breadcrumb up with the panels below. */
+.content-header {
+    padding: 12px 0.5rem;
+}
+
+.content-header .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.content-header .row {
+    padding: 0;
+}
+
+.content-header .row.mb-2 {
+    margin-bottom: 0 !important;
+}
+
 .info-circle-icon {
     border-radius: 50rem;
     -ms-flex-align: center;
