@@ -36,10 +36,16 @@ module.exports = Object.freeze({
   // Dashboard
   MIDDLEWARE_GET_LAST_DAYS_SALES_URL: MIDDLEWARE_BASE_URL + "/api/dashboard/last7daysSales",
 
+  // App Settings
+  MIDDLEWARE_SETTINGS_URL: MIDDLEWARE_BASE_URL + "/api/settings/",
+
   //Company details
   COMPANY_DETAILS: '<p style="font-size: 60%">ஸ்ரீ முருகன் துணை</p></br><p style="font-size: 150%">ஸ்ரீ முருகன் டீ ஸ்டால்(ஸ்வீட்ஸ்)</p></br><p style="font-size: 100%">488, பி.என்.ரோடு,திருப்பூர் - 641602</p> </br> <p style="font-size: 100%">www.srimurugansweets.com </p>',
-  COMPANY_QUOTES: "இனிய தீபாவளி வாழ்த்துக்கள்",
-  //COMPANY_QUOTES: "May the sweetness of sweets always stay in your life & make you sweet. Our Best Wishes...",
+  //Bill footer message is the BILL_FOOTER_MESSAGE app setting (Settings > App Settings)
+
+  //Thermal printer (RP3230), reached through print-server/server.js.
+  //Printer address, paper, size, darkness, copies and on/off are App Settings (PRINTER_*, THERMAL_PRINT_ENABLED).
+  THERMAL_PRINT_SERVER_URL: "http://127.0.0.1:9101",
 
   //Flags
   IS_SHOW_DISCOUNT: false,

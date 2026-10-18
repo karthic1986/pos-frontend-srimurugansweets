@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Router, Route } from "react-router-dom";
 import "react-date-picker/dist/DatePicker.css";
 import "react-calendar/dist/Calendar.css";
@@ -18,6 +18,9 @@ import OrderEditPage from "../pages/OrderEditPage";
 import history from "../history";
 import { ProtectedRoute } from "./ProtectedRoute";
 
+// Loaded on demand: its antd table/form code isn't needed on the billing screens.
+const SettingsPage = lazy(() => import("../pages/SettingsPage"));
+
 const App = () => {
   return (
     <Router history={history}>
@@ -34,6 +37,9 @@ const App = () => {
       <ProtectedRoute path="/customer" exact component={CustomerPage} />
       <ProtectedRoute path="/delivery" exact component={DeliveryPage} />
       <ProtectedRoute path="/orderedit" exact component={OrderEditPage} />
+      <Suspense fallback={null}>
+        <ProtectedRoute path="/settings/:section?" exact component={SettingsPage} />
+      </Suspense>
     </Router>
   );
 };

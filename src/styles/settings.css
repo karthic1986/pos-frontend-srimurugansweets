@@ -1,0 +1,87 @@
+/* Settings module: left menu + section panel */
+
+.settings-module {
+  overflow: hidden;
+}
+
+/* delivery.css pads every .row globally; the menu must sit flush in the card. */
+.settings-module > .row {
+  padding: 0;
+}
+
+.settings-menu {
+  background: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  padding: 12px 0;
+}
+
+.settings-menu-group {
+  color: #6c757d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 8px 20px;
+  text-transform: uppercase;
+}
+
+.settings-menu .nav-link {
+  border-left: 3px solid transparent;
+  color: #343a40;
+  padding: 10px 20px;
+}
+
+.settings-menu .nav-link:hover {
+  background: #e9ecef;
+}
+
+.settings-menu .nav-link.active {
+  background: #e7f1ff;
+  border-left-color: #007bff;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.settings-menu-icon {
+  margin-right: 10px;
+  text-align: center;
+  width: 16px;
+}
+
+.settings-section-header {
+  align-items: center;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  gap: 14px;
+  padding: 18px 24px;
+}
+
+.settings-section-icon {
+  color: #007bff;
+  font-size: 22px;
+}
+
+.settings-section-body {
+  padding: 18px 24px;
+}
+
+.app-setting-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.app-setting-value {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 767.98px) {
+  .settings-menu {
+    border-bottom: 1px solid #dee2e6;
+    border-right: 0;
+  }
+
+  .settings-section-header,
+  .settings-section-body {
+    padding: 14px 16px;
+  }
+}

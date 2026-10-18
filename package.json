@@ -31,7 +31,9 @@
     "sweetalert2-react-content": "^5.0.3"
   },
   "scripts": {
+    "postinstall": "node scripts/fix-html5-qrcode-sourcemaps.js",
     "start": "react-scripts start",
+    "print-server": "node print-server/server.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

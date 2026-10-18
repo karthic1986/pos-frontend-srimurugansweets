@@ -59,7 +59,7 @@ const MainHeader = () => {
                     <a href="#" className="nav-link d-flex align-items-center" data-toggle="dropdown">
                         <span className="header-user-name font-weight-bold d-none d-sm-inline-block">{user.firstName}</span>
                         <img
-                            src={process.env.PUBLIC_URL + "dist/img/user2-160x160.png"}
+                            src={process.env.PUBLIC_URL + "/dist/img/user2-160x160.png"}
                             className="header-user-avatar img-circle elevation-2"
                             alt="User"
                         />

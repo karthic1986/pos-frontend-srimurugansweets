@@ -5,9 +5,37 @@ import OrderPrintHeader from "../textFiles/OrderPrintHeader.txt";
 import OrderPrintTable from "../textFiles/OrderPrintTable.txt";
 import constants from "../constants";
 import moment from "moment";
+import ThermalPrintReport from "./ThermalPrintReport";
+import CustomToast from "./CustomToast";
+import { getAppSettingsMap, isThermalPrintEnabled } from "../actions/appSettingAction";
 
 
-const CustomPrintReport = async (orderDetails, orderId,productList) => {
+// printOnThermal: the order screen's "Thermal printer" checkbox. Reprints leave
+// it out and follow the THERMAL_PRINT_ENABLED setting.
+const CustomPrintReport = async (orderDetails, orderId,productList, printOnThermal) => {
+
+    // Copy before any await: CartContent resets the quantities a second after calling this.
+    productList = productList.map((prod) => ({ ...prod }));
+
+    // If settings can't be loaded, print with the defaults.
+    let settings = {};
+    try {
+        settings = await getAppSettingsMap();
+    } catch (error) {
+        console.log(error);
+    }
+    const footerMessage = settings.BILL_FOOTER_MESSAGE || "";
+
+    const useThermal = printOnThermal !== undefined ? printOnThermal : isThermalPrintEnabled(settings);
+    if (useThermal) {
+        try {
+            await ThermalPrintReport(orderDetails, orderId, productList, settings);
+            return;
+        } catch (error) {
+            console.log(error);
+            CustomToast("error", `Thermal print failed: ${error.message}. Opening normal print..`);
+        }
+    }
 
     let htmlPrintData = "";
     const response = await fetch(OrderPrintHeader);
@@ -68,7 +96,7 @@ const CustomPrintReport = async (orderDetails, orderId,productList) => {
 
     htmlTemplate = htmlTemplate.replace(
         "{{Quotes}}",
-        constants.COMPANY_QUOTES
+        footerMessage
     );
 
     htmlTemplate = htmlTemplate.replace(
@@ -96,7 +124,7 @@ const CustomPrintReport = async (orderDetails, orderId,productList) => {
     productList.map((prod) => {
         if (prod.qty > 0) {
             let total = prod.qty*prod.price;
-            htmlTableContent = htmlTableContent.replace("{{ProductItem}}", prod.name);
+            htmlTableContent = htmlTableContent.replace("{{ProductItem}}", prod.printName || prod.name);
             htmlTableContent = htmlTableContent.replace("{{ProductPrice}}",prod.price);
             htmlTableContent = htmlTableContent.replace("{{ProductQty}}", prod.qty);
             htmlTableContent = htmlTableContent.replace("{{ProductAmount}}",total);

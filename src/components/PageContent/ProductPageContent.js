@@ -142,6 +142,7 @@ const ProductPageContent=()=>{
           fields: [
             { name: "id", type: "text", title: "Id" },
             { name: "name", type: "text", title: "Name" },
+            { name: "printName", type: "text", title: "Print Name" },
             { name: "categoryName", type: "text", title: "Category" },
             { name: "price", type: "number", title: "Price" },
             {

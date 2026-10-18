@@ -19,7 +19,7 @@ const MainSidebar = () => {
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
       {/* <!-- Brand Logo --> */}
       <a href="/dashboard" className="brand-link">
-        <img src={process.env.PUBLIC_URL + "dist/img/AdminLTELogo.png"} alt="AdminLTE Logo" className="brand-image img-circle elevation-3" style={{ opacity: 0.8 }} />
+        <img src={process.env.PUBLIC_URL + "/dist/img/AdminLTELogo.png"} alt="AdminLTE Logo" className="brand-image img-circle elevation-3" style={{ opacity: 0.8 }} />
         <span className="brand-text font-weight-light">Admire POS</span>
       </a>
 
@@ -106,6 +106,12 @@ const MainSidebar = () => {
                   </a>
                 </li>
               </ul>
+            </li>
+            <li className="nav-item">
+              <a href="/settings" className={`nav-link${pathname.startsWith("/settings") ? " active" : ""}`}>
+                <i className="nav-icon fas fa-cog"></i>
+                <p>Settings</p>
+              </a>
             </li>
           </ul>
         </nav>

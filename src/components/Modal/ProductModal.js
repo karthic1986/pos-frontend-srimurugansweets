@@ -25,6 +25,8 @@ const ProductModal = props =>{
     );
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState("");
+    // null until the user types in Print Name; until then it follows Name.
+    const [printName, setPrintName] = useState(null);
 
     const clearInputs =()=>{
         let clear={
@@ -35,9 +37,17 @@ const ProductModal = props =>{
             isActive:true,
         }
         setState(clear);
+        setPrintName(null);
         setShowAddCategory(false);
         setNewCategoryName("");
     }
+
+    const currentName = state.name.length>0 ? state.name : (isEdit ? prod.name : "");
+    const savedPrintName = isEdit ? (prod.printName || prod.name) : "";
+    // A print name that was never customised keeps following the product name.
+    const isPrintNameLinked = !isEdit || savedPrintName === prod.name;
+    const printNameValue = printName !== null ? printName : (isPrintNameLinked ? currentName : savedPrintName);
+    const finalPrintName = printNameValue.trim() || currentName;
 
     const handleChangeCategory=(e)=>{
         const value = e.target.value;
@@ -103,6 +113,7 @@ const ProductModal = props =>{
         var categoryId = state.categoryId;
         let editState = {
             "name": name.length>0?name:prod.name,
+            "printName": finalPrintName,
             "categoryId": categoryId!==""?categoryId:prod.categoryId,
             "shortName": sname.length>0? sname:prod.shortName,
             "price": price>0?price:prod.price,
@@ -131,6 +142,20 @@ const ProductModal = props =>{
                         //value={state.name}
                         onChange={handleChangeName}
                     />
+                </div>
+                <br/>
+                <div className="form-outline">
+                    <Form.Label>Print Name</Form.Label>
+                    <input
+                        type="text"
+                        name='printName'
+                        className='form-control'
+                        maxLength={100}
+                        placeholder="Same as Product Name"
+                        value={printNameValue}
+                        onChange={(e)=>setPrintName(e.target.value)}
+                    />
+                    <Form.Text muted>Shown on the receipt. Defaults to the Product Name.</Form.Text>
                 </div>
                 <br/>
                 <div className="form-outline">
@@ -233,7 +258,7 @@ const ProductModal = props =>{
                             props.toggle();
                             clearInputs();
                             console.log(state);
-                            isEdit?EditFunction():props.AddProduct(state);
+                            isEdit?EditFunction():props.AddProduct({...state, printName: finalPrintName});
                         }
                     }>
                     Save

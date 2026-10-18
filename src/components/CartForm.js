@@ -14,6 +14,7 @@ import constants from "../constants";
 import { set } from "lodash";
 import { searchCustomersByMobileSvc } from "../actions/customerAction";
 import CustomerEditDrawer from "./CustomerEditDrawer";
+import { getAppSettingsMap, isThermalPrintEnabled } from "../actions/appSettingAction";
 
 export const CartForm = (props) => {
   const ref2 = useRef(null);
@@ -34,6 +35,18 @@ export const CartForm = (props) => {
   const lastSearchedMobileRef = useRef("");
   const [customerRecord, setCustomerRecord] = useState(() => (isOrderFromDelivery || isOrderFromEdit ? customerFromDelivery : null));
   const [showEditDrawer, setShowEditDrawer] = useState(false);
+  // Checked = thermal printer, unchecked = this PC's printer (print dialog).
+  // Defaults to checked unless the THERMAL_PRINT_ENABLED setting is "false".
+  const [printOnThermal, setPrintOnThermal] = useState(true);
+  const printChoiceTouchedRef = useRef(false);
+
+  useEffect(() => {
+    getAppSettingsMap()
+      .then((settings) => {
+        if (!printChoiceTouchedRef.current) setPrintOnThermal(isThermalPrintEnabled(settings));
+      })
+      .catch((error) => console.log(error));
+  }, []);
 
   const options = ["Morning", "Afternoon", "Evening", "Night"];
 
@@ -252,19 +265,19 @@ export const CartForm = (props) => {
       console.log(totAmt, advPayment + parseInt(state.payment) + parseInt(state.discount));
       if (totAmt === advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderResult = orderFromDelivery?.id ? props.createOrder(state, orderFromDelivery.id) : props.createOrder(state, 0);
+        orderResult = props.createOrder(state, orderFromDelivery?.id ? orderFromDelivery.id : 0, printOnThermal);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else if (isOrderFromEdit) {
       if (totAmt >= advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderResult = props.createOrder(state, orderFromDelivery.id);
+        orderResult = props.createOrder(state, orderFromDelivery.id, printOnThermal);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else {
-      orderResult = props.createOrder(state, 0);
+      orderResult = props.createOrder(state, 0, printOnThermal);
     }
 
     Promise.resolve(orderResult).finally(() => {
@@ -463,6 +476,27 @@ export const CartForm = (props) => {
             </div>
           </div>
           <div className="col-md-6">
+            <div className="form-group">
+              <label>Printer</label>
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="printOnThermal"
+                  checked={printOnThermal}
+                  onChange={(e) => {
+                    printChoiceTouchedRef.current = true;
+                    setPrintOnThermal(e.target.checked);
+                  }}
+                />
+                <label className="form-check-label" htmlFor="printOnThermal">
+                  Thermal printer
+                </label>
+              </div>
+              <small className="text-muted">
+                {printOnThermal ? "Bill prints on the thermal printer." : "Bill opens in the print dialog for this PC's printer."}
+              </small>
+            </div>
             <div className="form-group">
               <button className="btn btn-secondary order-action-btn" type="button" onClick={handleCancelOrder} disabled={isSubmitting}>
                 Cancel Order
