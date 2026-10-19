@@ -3,7 +3,8 @@ import moment from "moment";
 import constants from "../constants";
 
 // Prints the order receipt on the RP3230 thermal printer through the local
-// print server (print-server/server.js). The receipt is drawn on a canvas and
+// print server (print-server/server.js), when THERMAL_PRINT_METHOD is
+// "print-server" (ThermalDriverPrint is the default). The receipt is drawn on a canvas and
 // sent as an ESC/POS raster image, because the printer's built-in fonts have
 // no Tamil glyphs. Printer address, paper, text size, darkness and copies
 // come from the PRINTER_* App Settings.
@@ -33,8 +34,8 @@ const intSetting = (value, fallback, min, max) => {
 };
 
 // App Settings (all strings) -> print options. Blank or invalid values use the
-// defaults, except PRINTER_HOST, which has none.
-const printerOptions = (settings) => ({
+// defaults, except PRINTER_HOST, which has none. ThermalDriverPrint uses them too.
+export const printerOptions = (settings) => ({
     host: (settings.PRINTER_HOST || "").trim(),
     port: intSetting(settings.PRINTER_PORT, DEFAULT_PRINTER_PORT, 1, 65535),
     paperWidth: PAPER_DOTS[intSetting(settings.PRINTER_PAPER_WIDTH_MM, DEFAULT_PAPER_MM, 1, 999)] || PAPER_DOTS[DEFAULT_PAPER_MM],

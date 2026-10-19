@@ -8,3 +8,7 @@ Deployment steps for prod branch with APP Engin
 1. npm install
 2. npm run build
 3. gcloud app deploy
+
+
+Deploy in app engine
+gcloud config set project pos-application-358116

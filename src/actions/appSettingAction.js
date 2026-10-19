@@ -26,6 +26,11 @@ export const deleteAppSettingSvc = async (id) => {
 export const isThermalPrintEnabled = (settings) =>
   (settings.THERMAL_PRINT_ENABLED || "").trim().toLowerCase() !== "false";
 
+// THERMAL_PRINT_METHOD: "print-server" sends thermal bills through print-server/server.js;
+// anything else prints them with the browser, through the printer's own driver.
+export const isPrintServerMethod = (settings) =>
+  (settings.THERMAL_PRINT_METHOD || "").trim().toLowerCase() === "print-server";
+
 // All settings as { NAME: value }. A setting that doesn't exist is undefined.
 export const getAppSettingsMap = async () => {
   const res = await getAppSettingsSvc();

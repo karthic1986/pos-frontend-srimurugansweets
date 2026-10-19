@@ -6,6 +6,8 @@ var urlsToCache = [
 
 // Install a service worker
 self.addEventListener('install', event => {
+  // Replace the old worker right away instead of waiting for every tab to close.
+  self.skipWaiting();
   // Perform install steps
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -18,6 +20,14 @@ self.addEventListener('install', event => {
 
 // Cache and return requests
 self.addEventListener('fetch', event => {
+  // Only this site's own GETs go through the cache. Everything else (API calls,
+  // bills POSTed to the thermal print server on 127.0.0.1) is left to the page:
+  // Chrome blocks a service worker's requests to 127.0.0.1 from the live site,
+  // because only the page can ask the cashier for local network permission.
+  var url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) {
+    return;
+  }
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -43,6 +53,6 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });

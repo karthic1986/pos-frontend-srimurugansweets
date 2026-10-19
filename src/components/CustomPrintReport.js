@@ -6,12 +6,14 @@ import OrderPrintTable from "../textFiles/OrderPrintTable.txt";
 import constants from "../constants";
 import moment from "moment";
 import ThermalPrintReport from "./ThermalPrintReport";
+import ThermalDriverPrint from "./ThermalDriverPrint";
 import CustomToast from "./CustomToast";
-import { getAppSettingsMap, isThermalPrintEnabled } from "../actions/appSettingAction";
+import { getAppSettingsMap, isPrintServerMethod, isThermalPrintEnabled } from "../actions/appSettingAction";
 
 
 // printOnThermal: the order screen's "Thermal printer" checkbox. Reprints leave
-// it out and follow the THERMAL_PRINT_ENABLED setting.
+// it out and follow the THERMAL_PRINT_ENABLED setting. Thermal bills go through
+// the printer's driver, or the print server when THERMAL_PRINT_METHOD is "print-server".
 const CustomPrintReport = async (orderDetails, orderId,productList, printOnThermal) => {
 
     // Copy before any await: CartContent resets the quantities a second after calling this.
@@ -29,7 +31,8 @@ const CustomPrintReport = async (orderDetails, orderId,productList, printOnTherm
     const useThermal = printOnThermal !== undefined ? printOnThermal : isThermalPrintEnabled(settings);
     if (useThermal) {
         try {
-            await ThermalPrintReport(orderDetails, orderId, productList, settings);
+            const printThermal = isPrintServerMethod(settings) ? ThermalPrintReport : ThermalDriverPrint;
+            await printThermal(orderDetails, orderId, productList, settings);
             return;
         } catch (error) {
             console.log(error);
