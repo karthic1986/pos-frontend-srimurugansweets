@@ -7,14 +7,22 @@ import constants from "../constants";
 import moment from "moment";
 import ThermalPrintReport from "./ThermalPrintReport";
 import ThermalDriverPrint from "./ThermalDriverPrint";
+import BluetoothPrint, { isBluetoothPreferred } from "./BluetoothPrint";
 import CustomToast from "./CustomToast";
 import { getAppSettingsMap, isPrintServerMethod, isThermalPrintEnabled } from "../actions/appSettingAction";
 
 
-// printOnThermal: the order screen's "Thermal printer" checkbox. Reprints leave
-// it out and follow the THERMAL_PRINT_ENABLED setting. Thermal bills go through
-// the printer's driver, or the print server when THERMAL_PRINT_METHOD is "print-server".
-const CustomPrintReport = async (orderDetails, orderId,productList, printOnThermal) => {
+// Where bills print when nothing is chosen: the Bluetooth printer if this
+// device chose it, else the THERMAL_PRINT_ENABLED setting.
+export const defaultPrintOn = (settings) => {
+    if (isBluetoothPreferred()) return "bluetooth";
+    return isThermalPrintEnabled(settings) ? "thermal" : "pc";
+};
+
+// printOn: the order screen's "Print on" choice, "thermal", "pc" or "bluetooth".
+// Reprints leave it out and use defaultPrintOn. Thermal bills go through the
+// printer's driver, or the print server when THERMAL_PRINT_METHOD is "print-server".
+const CustomPrintReport = async (orderDetails, orderId,productList, printOn) => {
 
     // Copy before any await: CartContent resets the quantities a second after calling this.
     productList = productList.map((prod) => ({ ...prod }));
@@ -28,8 +36,16 @@ const CustomPrintReport = async (orderDetails, orderId,productList, printOnTherm
     }
     const footerMessage = settings.BILL_FOOTER_MESSAGE || "";
 
-    const useThermal = printOnThermal !== undefined ? printOnThermal : isThermalPrintEnabled(settings);
-    if (useThermal) {
+    if (printOn === undefined) printOn = defaultPrintOn(settings);
+    if (printOn === "bluetooth") {
+        try {
+            await BluetoothPrint(orderDetails, orderId, productList, settings);
+            return;
+        } catch (error) {
+            console.log(error);
+            CustomToast("error", `Bluetooth print failed: ${error.message}. Opening normal print..`);
+        }
+    } else if (printOn === "thermal") {
         try {
             const printThermal = isPrintServerMethod(settings) ? ThermalPrintReport : ThermalDriverPrint;
             await printThermal(orderDetails, orderId, productList, settings);

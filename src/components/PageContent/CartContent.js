@@ -55,8 +55,8 @@ const CartContent = () => {
     });
   };
 
-  const printReport = (orderDetails, orderId, productList, printOnThermal) => {
-    CustomPrintReport(orderDetails, orderId, productList, printOnThermal);
+  const printReport = (orderDetails, orderId, productList, printOn) => {
+    CustomPrintReport(orderDetails, orderId, productList, printOn);
     setTimeout(() => {
       clearOrder();
       progress.finish();
@@ -64,7 +64,7 @@ const CartContent = () => {
     }, 1000);
   };
 
-  const createOrder = async (customerDetails, orderId, printOnThermal) => {
+  const createOrder = async (customerDetails, orderId, printOn) => {
     progress.start();
     order = {
       customerNumber: customerDetails.customerNumber,
@@ -103,7 +103,7 @@ const CartContent = () => {
         console.log(res);
         if (res.status == 200) {
           CustomToast("success", "Order placed successfully");
-          printReport(order, isOrderFromDelivery || isOrderFromEdit ? res.data.orderId : res.data.id, productList, printOnThermal);
+          printReport(order, isOrderFromDelivery || isOrderFromEdit ? res.data.orderId : res.data.id, productList, printOn);
           if (isOrderFromDelivery || isOrderFromEdit)
             setTimeout(() => {
               dispatchDelivery({

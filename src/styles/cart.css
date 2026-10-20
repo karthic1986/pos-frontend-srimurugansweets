@@ -393,6 +393,14 @@
     padding: 0 24px 16px;
 }
 
+.bill-bluetooth {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+}
+
 .bill-actions {
     display: grid;
     gap: 8px;

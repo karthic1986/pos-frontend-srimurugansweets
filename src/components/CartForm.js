@@ -14,7 +14,18 @@ import { GET_ACTIVE_PRODUCTS } from "../actions/type";
 import constants from "../constants";
 import { searchCustomersByMobileSvc } from "../actions/customerAction";
 import CustomerEditDrawer from "./CustomerEditDrawer";
-import { getAppSettingsMap, isThermalPrintEnabled } from "../actions/appSettingAction";
+import { getAppSettingsMap } from "../actions/appSettingAction";
+import { defaultPrintOn } from "./CustomPrintReport";
+import {
+  isBluetoothSupported,
+  isBluetoothPreferred,
+  setBluetoothPreferred,
+  bluetoothPrinterName,
+  connectBluetoothPrinter,
+  restoreBluetoothPrinter,
+  wasBluetoothPrinterPicked,
+  warmUpBluetoothPrinter,
+} from "./BluetoothPrint";
 import { toNumber, rupees } from "../money";
 
 const DELIVERY_TIMES = ["Morning", "Afternoon", "Evening", "Night"];
@@ -44,18 +55,53 @@ export const CartForm = (props) => {
   const paymentRef = useRef(null);
   const submitRef = useRef(null);
   const [isSubmitFocused, setIsSubmitFocused] = useState(false);
-  // Thermal printer or this PC's printer (print dialog). Defaults to the
-  // thermal printer unless the THERMAL_PRINT_ENABLED setting is "false".
-  const [printOnThermal, setPrintOnThermal] = useState(true);
+  // Thermal printer, this PC's printer (print dialog) or a Bluetooth printer.
+  // Defaults to Bluetooth if this device chose it, else to the thermal printer
+  // unless the THERMAL_PRINT_ENABLED setting is "false".
+  const [printOn, setPrintOn] = useState(() => (isBluetoothPreferred() ? "bluetooth" : "thermal"));
   const printChoiceTouchedRef = useRef(false);
+  const [bluetoothPrinter, setBluetoothPrinter] = useState(bluetoothPrinterName);
+  const [isConnectingPrinter, setIsConnectingPrinter] = useState(false);
+  // Chrome forgot the printer picked before this reload, so Submit asks for it again.
+  const [isPrinterForgotten, setIsPrinterForgotten] = useState(false);
 
   useEffect(() => {
     getAppSettingsMap()
       .then((settings) => {
-        if (!printChoiceTouchedRef.current) setPrintOnThermal(isThermalPrintEnabled(settings));
+        if (!printChoiceTouchedRef.current) setPrintOn(defaultPrintOn(settings));
       })
       .catch((error) => console.log(error));
+    if (isBluetoothPreferred()) {
+      restoreBluetoothPrinter()
+        .then((name) => {
+          setBluetoothPrinter(name);
+          setIsPrinterForgotten(!name && wasBluetoothPrinterPicked());
+          // Connect while the cashier fills in the order, not on Submit.
+          warmUpBluetoothPrinter();
+        })
+        .catch((error) => console.log(error));
+    }
   }, []);
+
+  // Must run straight from a tap: Chrome shows its printer list only then.
+  // Resolves with the printer's name, or "" if none was connected.
+  const handleConnectPrinter = async () => {
+    setIsConnectingPrinter(true);
+    try {
+      const name = await connectBluetoothPrinter();
+      setBluetoothPrinter(name);
+      setIsPrinterForgotten(false);
+      CustomToast("success", `Connected to ${name}`);
+      return name;
+    } catch (error) {
+      // NotFoundError: the cashier closed Chrome's printer list.
+      if (error.name !== "NotFoundError") CustomToast("error", error.message);
+      setBluetoothPrinter(bluetoothPrinterName());
+      return "";
+    } finally {
+      setIsConnectingPrinter(false);
+    }
+  };
 
   const [state, setState] = useState({
     customerName: "",
@@ -273,6 +319,15 @@ export const CartForm = (props) => {
       CustomToast("error", "Please enter a valid 10 digit mobile number");
       return;
     }
+    // No printer yet (or Chrome forgot it on a reload): pick it in this tap, then save and print.
+    if (printOn === "bluetooth" && !bluetoothPrinter) {
+      if (!isConnectingPrinter) handleConnectPrinter().then((name) => name && submitOrder());
+      return;
+    }
+    submitOrder();
+  };
+
+  const submitOrder = () => {
     // Guard against double submission (e.g. double-clicking the button)
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
@@ -284,19 +339,19 @@ export const CartForm = (props) => {
     if (state.isDelivered) {
       if (totAmt === advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderResult = props.createOrder(state, orderFromDelivery?.id ? orderFromDelivery.id : 0, printOnThermal);
+        orderResult = props.createOrder(state, orderFromDelivery?.id ? orderFromDelivery.id : 0, printOn);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else if (isOrderFromEdit) {
       if (totAmt >= advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderResult = props.createOrder(state, orderFromDelivery.id, printOnThermal);
+        orderResult = props.createOrder(state, orderFromDelivery.id, printOn);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else {
-      orderResult = props.createOrder(state, 0, printOnThermal);
+      orderResult = props.createOrder(state, 0, printOn);
     }
 
     // On success CartContent prints and leaves this page; on failure the
@@ -598,13 +653,29 @@ export const CartForm = (props) => {
               options={[
                 { label: "Thermal printer", value: "thermal" },
                 { label: "This PC", value: "pc" },
+                ...(isBluetoothSupported() ? [{ label: "Bluetooth", value: "bluetooth" }] : []),
               ]}
-              value={printOnThermal ? "thermal" : "pc"}
+              value={printOn}
               onChange={(value) => {
                 printChoiceTouchedRef.current = true;
-                setPrintOnThermal(value === "thermal");
+                setPrintOn(value);
+                setBluetoothPreferred(value === "bluetooth");
               }}
             />
+            {printOn === "bluetooth" && (
+              <div className="bill-bluetooth">
+                <span className="co-hint">
+                  {bluetoothPrinter
+                    ? `Printer: ${bluetoothPrinter}`
+                    : isPrinterForgotten
+                      ? "Chrome forgot the printer on reload. Submit asks for it once."
+                      : "No printer connected. Submit asks for it once."}
+                </span>
+                <Button size="small" onClick={handleConnectPrinter} loading={isConnectingPrinter}>
+                  {bluetoothPrinter ? "Change printer" : "Connect printer"}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="bill-actions">
