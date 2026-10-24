@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import DatePicker from "react-date-picker";
 import { reportByCustomer } from "../../../actions/reportAction";
 import PrintHeaderFooter from "../../../textFiles/PrintHeaderFooter.txt";
 import PrintCustomerReportTableHeader from "../../../textFiles/PrintCustomerReportTableHeader.txt";
@@ -7,6 +6,8 @@ import PrintCustomerReportTableContent from "../../../textFiles/PrintCustomerRep
 import printJS from 'print-js';
 import { concat } from "lodash";
 import CustomToast from '../../CustomToast';
+import { savedFromDate, saveFromDate } from "../../../reportFromDate";
+import ReportFilter from "./ReportFilter";
 
 
 const ReportByCustomerContent = () => {
@@ -16,7 +17,7 @@ const ReportByCustomerContent = () => {
     past.setDate(past.getDate()-30);
     const [report,setReport] = useState([]);
     const [state, setState] = useState({
-        fromDate: past,
+        fromDate: savedFromDate("customer", past),
         toDate: new Date(),
     });
 
@@ -27,17 +28,18 @@ const ReportByCustomerContent = () => {
 
 
     const handleChangeFromDate = (e) => {
-        setState({
-            ...state,
+        saveFromDate("customer", e);
+        setState((s) => ({
+            ...s,
             fromDate: e,
-        });
+        }));
     };
 
     const handleChangeToDate = (e) => {
-        setState({
-            ...state,
+        setState((s) => ({
+            ...s,
             toDate: e,
-        });
+        }));
     };
 
     async function getReport () {
@@ -120,55 +122,14 @@ const ReportByCustomerContent = () => {
 
 
             <section className="content">
-                <div className="card card-default">
-                    <div className="card-header">
-                        <h3 className="card-title">Apply Filter</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div className="card-body">
-                        <div className="row">
-                            <div className="col-md-6">
-                                <div className="form-group">
-                                    <label>From Date</label>
-                                    <DatePicker
-                                        onChange={handleChangeFromDate}
-                                        value={state.fromDate}
-                                        name="fromDate"
-                                        className="input-group date"
-                                        clearIcon={null}
-                                    />
-                                </div>
-                            </div>
-                            <div className="col-md-6">
-                                <div className="form-group">
-
-                                    <label>To Date</label>
-                                    <DatePicker
-                                        onChange={handleChangeToDate}
-                                        className="input-group date"
-                                        value={state.toDate}
-                                        name="toDate"
-                                        clearIcon={null}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                </div>
-                            </div>
-                        </div>
-                        <div className="row">
-                            <div className="form-group">
-                                <button className="btn btn-primary" onClick={getReport}>Get Report</button>
-                                &nbsp;&nbsp;
-                                <button className="btn btn-secondary" onClick={printReport}>Print</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <ReportFilter
+                    fromDate={state.fromDate}
+                    toDate={state.toDate}
+                    onFromDateChange={handleChangeFromDate}
+                    onToDateChange={handleChangeToDate}
+                    onGetReport={getReport}
+                    onPrint={printReport}
+                />
 
                 <div className="card">
                     <div className="card-header">

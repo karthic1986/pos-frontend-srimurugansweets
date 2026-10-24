@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
-import DatePicker from "react-date-picker";
 import { nondeliveryReport, nondeliveryReportByProduct } from "../../../actions/reportAction";
 import printJS from "print-js";
 import PrintHeaderFooter from "../../../textFiles/PrintHeaderFooter.txt";
 import { concat } from "lodash";
 import CustomToast from "../../CustomToast";
 import moment from "moment";
+import { savedFromDate, saveFromDate } from "../../../reportFromDate";
+import ReportFilter, { ReportFilterField } from "./ReportFilter";
+import { Segmented, Switch } from "antd";
 const ReportNonDeliveryContent = () => {
   const myGrid = useRef(null);
   var past = new Date();
   past.setDate(past.getDate() - 365);
   const [report, setReport] = useState([]);
   const [state, setState] = useState({
-    fromDate: past,
+    fromDate: savedFromDate("nonDelivery", past),
     toDate: new Date(),
   });
   const [showAmount, setShowAmount] = useState(false);
@@ -23,25 +25,18 @@ const ReportNonDeliveryContent = () => {
   }, []);
 
   const handleChangeFromDate = (e) => {
-    setState({
-      ...state,
+    saveFromDate("nonDelivery", e);
+    setState((s) => ({
+      ...s,
       fromDate: e,
-    });
+    }));
   };
 
   const handleChangeToDate = (e) => {
-    setState({
-      ...state,
+    setState((s) => ({
+      ...s,
       toDate: e,
-    });
-  };
-
-  const handleChangeShowAmount = (e) => {
-    setShowAmount(e.target.checked);
-  };
-
-  const handleChangeReportType = (e) => {
-    setReportType(e.target.value);
+    }));
   };
 
   async function getReport() {
@@ -189,66 +184,30 @@ const ReportNonDeliveryContent = () => {
 
       {/* <!-- Main content --> */}
       <section className="content">
-        <div className="card card-default">
-          <div className="card-header">
-            <h3 className="card-title">Apply Filter</h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                <i class="fas fa-minus"></i>
-              </button>
-            </div>
-          </div>
-          <div className="card-body">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>From Date</label>
-                  <DatePicker onChange={handleChangeFromDate} value={state.fromDate} name="fromDate" className="input-group date" clearIcon={null} />
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>To Date</label>
-                  <DatePicker onChange={handleChangeToDate} className="input-group date" value={state.toDate} name="toDate" clearIcon={null} />
-                </div>
-                <div className="form-group"></div>
-              </div>
-            </div>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>Report Type</label>
-                  <select className="form-control" value={reportType} onChange={handleChangeReportType}>
-                    <option value="customer">Customer Wise</option>
-                    <option value="product">Product Wise</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label className="d-block">&nbsp;</label>
-                  <div className="form-check">
-                    <input type="checkbox" className="form-check-input" id="showAmount" checked={showAmount} onChange={handleChangeShowAmount} />
-                    <label className="form-check-label" htmlFor="showAmount">
-                      Show Amount
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="row">
-              <div className="form-group">
-                <button className="btn btn-primary" onClick={getReport}>
-                  Get Report
-                </button>
-                &nbsp;&nbsp;
-                <button className="btn btn-secondary" onClick={printReport}>
-                  Print
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ReportFilter
+          fromDate={state.fromDate}
+          toDate={state.toDate}
+          onFromDateChange={handleChangeFromDate}
+          onToDateChange={handleChangeToDate}
+          onGetReport={getReport}
+          onPrint={printReport}
+        >
+          <ReportFilterField label="Report Type">
+            <Segmented
+              size="large"
+              options={[
+                { label: "Customer Wise", value: "customer" },
+                { label: "Product Wise", value: "product" },
+              ]}
+              value={reportType}
+              onChange={setReportType}
+            />
+          </ReportFilterField>
+          <label className="rf-toggle">
+            <Switch checked={showAmount} onChange={setShowAmount} />
+            Show Amount
+          </label>
+        </ReportFilter>
 
         <div className="card">
           <div className="card-header">

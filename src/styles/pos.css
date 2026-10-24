@@ -16,3 +16,15 @@
     --pos-over: #cf222e;
     --pos-ease: cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* antd Segmented options are <label>s, which Bootstrap gives a bottom margin
+   and AdminLTE a bold weight (label:not(...), hence the long selector): that
+   pushed the options off-centre in their track and made them all bold. */
+.ant-segmented .ant-segmented-group label.ant-segmented-item {
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.ant-segmented .ant-segmented-group label.ant-segmented-item-selected {
+    font-weight: 600;
+}
