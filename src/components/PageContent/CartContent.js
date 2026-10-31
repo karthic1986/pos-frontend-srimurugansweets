@@ -55,12 +55,15 @@ const CartContent = () => {
     });
   };
 
+  // printOn: null when the cashier chose not to print a receipt.
+  // A delivered order goes back to Delivery and an edited one to Edit Order,
+  // whose search input takes the focus for the next order.
   const printReport = (orderDetails, orderId, productList, printOn) => {
-    CustomPrintReport(orderDetails, orderId, productList, printOn);
+    if (printOn !== null) CustomPrintReport(orderDetails, orderId, productList, printOn);
     setTimeout(() => {
       clearOrder();
       progress.finish();
-      history.push("/order");
+      history.push(isOrderFromDelivery ? "/delivery" : isOrderFromEdit ? "/orderedit" : "/order");
     }, 1000);
   };
 
@@ -72,10 +75,12 @@ const CartContent = () => {
       payment: customerDetails.payment,
       totalQty: totalQty,
       totalAmount: totalAmount,
-      orderDate: new Date(),
+      // Editing or delivering keeps the order's own date (the server never changes it).
+      orderDate: isOrderFromDelivery || isOrderFromEdit ? orderFromDelivery.orderDate : new Date(),
       isDelivery: customerDetails.isDelivered,
       deliveryTime: customerDetails.deliveryTime,
-      deliveryDate: customerDetails.deliveryDate === null ? new Date() : customerDetails.deliveryDate,
+      // Handed over now: delivered today. Otherwise the date on the form.
+      deliveryDate: customerDetails.isDelivered || !customerDetails.deliveryDate ? new Date() : customerDetails.deliveryDate,
       notes: customerDetails.notes,
       createdBy: 1,
       updatedBy: 1,

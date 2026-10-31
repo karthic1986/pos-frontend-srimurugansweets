@@ -30,6 +30,14 @@ const OrderEditPageContent = () => {
       });
   };
 
+  // Enter in the search input searches, like the Search button.
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter" && searchTerm.trim() !== "") {
+      e.preventDefault();
+      handleSearchButton();
+    }
+  };
+
   const handleSelectClick = (item) => {
     let id = item.id;
     getOrderDetailsSvc(id)
@@ -143,7 +151,7 @@ const OrderEditPageContent = () => {
                 <div className="form-group">
                   <div className="box">
                     <i className="fa fa-search"></i>
-                    <input type="text" name="searchTerm" required className="form-control" value={searchTerm} onChange={handleSearchTerm} placeholder="Customer mobile number / order Id" />
+                    <input type="text" name="searchTerm" required autoFocus className="form-control" value={searchTerm} onChange={handleSearchTerm} onKeyDown={handleSearchKeyDown} placeholder="Customer mobile number / order Id" />
                   </div>
                 </div>
               </div>

@@ -6,7 +6,7 @@ import "../styles/cart.css";
 import POS_THEME from "../styles/posTheme";
 import { useStoreState as useStoreStateDelivery } from "../reducers/deliveryReducer";
 import CustomToast from "./CustomToast";
-import { Button, AutoComplete, Segmented, Popconfirm, ConfigProvider } from "antd";
+import { Button, AutoComplete, Segmented, Popconfirm, ConfigProvider, Checkbox } from "antd";
 import { EditOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import history from "../history";
 import { dispatch } from "../reducers/productReducer";
@@ -35,6 +35,12 @@ const toPaise = (value) => Math.round(value * 100) / 100;
 
 const blurOnWheel = (e) => e.currentTarget.blur();
 
+// A date from the server as a Date, or today if it is missing or unreadable.
+const savedDate = (value) => {
+  const date = value ? new Date(value) : null;
+  return date && !isNaN(date) ? date : new Date();
+};
+
 export const CartForm = (props) => {
   const ref2 = useRef(null);
   const ref6 = useRef(null);
@@ -59,6 +65,11 @@ export const CartForm = (props) => {
   // Defaults to Bluetooth if this device chose it, else to the thermal printer
   // unless the THERMAL_PRINT_ENABLED setting is "false".
   const [printOn, setPrintOn] = useState(() => (isBluetoothPreferred() ? "bluetooth" : "thermal"));
+  // Delivering or editing an order prints no receipt unless the cashier ticks Print receipt.
+  const isPrintOptional = isOrderFromDelivery || isOrderFromEdit;
+  const [printReceipt, setPrintReceipt] = useState(!isPrintOptional);
+  // What the order prints on: null when it prints nothing.
+  const printTarget = printReceipt ? printOn : null;
   const printChoiceTouchedRef = useRef(false);
   const [bluetoothPrinter, setBluetoothPrinter] = useState(bluetoothPrinterName);
   const [isConnectingPrinter, setIsConnectingPrinter] = useState(false);
@@ -151,7 +162,8 @@ export const CartForm = (props) => {
         payment: 0,
         customerName: customerFromDelivery.name,
         customerNumber: customerFromDelivery.mobile,
-        deliveryDate: new Date(),
+        // The saved delivery date; it changes only if the cashier picks another.
+        deliveryDate: savedDate(orderFromDelivery.deliveryDate),
         deliveryTime: orderFromDelivery.deliveryTime,
         isDelivered: false,
         notes: orderFromDelivery.notes,
@@ -320,7 +332,7 @@ export const CartForm = (props) => {
       return;
     }
     // No printer yet (or Chrome forgot it on a reload): pick it in this tap, then save and print.
-    if (printOn === "bluetooth" && !bluetoothPrinter) {
+    if (printTarget === "bluetooth" && !bluetoothPrinter) {
       if (!isConnectingPrinter) handleConnectPrinter().then((name) => name && submitOrder());
       return;
     }
@@ -339,19 +351,19 @@ export const CartForm = (props) => {
     if (state.isDelivered) {
       if (totAmt === advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderResult = props.createOrder(state, orderFromDelivery?.id ? orderFromDelivery.id : 0, printOn);
+        orderResult = props.createOrder(state, orderFromDelivery?.id ? orderFromDelivery.id : 0, printTarget);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else if (isOrderFromEdit) {
       if (totAmt >= advPayment + parseInt(state.payment) + parseInt(state.discount)) {
         state.payment = advPayment + parseInt(state.payment);
-        orderResult = props.createOrder(state, orderFromDelivery.id, printOn);
+        orderResult = props.createOrder(state, orderFromDelivery.id, printTarget);
       } else {
         CustomToast("error", "Please check the payment");
       }
     } else {
-      orderResult = props.createOrder(state, 0, printOn);
+      orderResult = props.createOrder(state, 0, printTarget);
     }
 
     // On success CartContent prints and leaves this page; on failure the
@@ -644,37 +656,46 @@ export const CartForm = (props) => {
           </div>
 
           <div className="co-field bill-print">
-            <span className="co-label" id="co-print-label">
-              Print on
-            </span>
-            <Segmented
-              block
-              aria-labelledby="co-print-label"
-              options={[
-                { label: "Thermal printer", value: "thermal" },
-                { label: "This PC", value: "pc" },
-                ...(isBluetoothSupported() ? [{ label: "Bluetooth", value: "bluetooth" }] : []),
-              ]}
-              value={printOn}
-              onChange={(value) => {
-                printChoiceTouchedRef.current = true;
-                setPrintOn(value);
-                setBluetoothPreferred(value === "bluetooth");
-              }}
-            />
-            {printOn === "bluetooth" && (
-              <div className="bill-bluetooth">
-                <span className="co-hint">
-                  {bluetoothPrinter
-                    ? `Printer: ${bluetoothPrinter}`
-                    : isPrinterForgotten
-                      ? "Chrome forgot the printer on reload. Submit asks for it once."
-                      : "No printer connected. Submit asks for it once."}
+            {isPrintOptional && (
+              <Checkbox className="bill-print-toggle" checked={printReceipt} onChange={(e) => setPrintReceipt(e.target.checked)}>
+                Print receipt
+              </Checkbox>
+            )}
+            {printReceipt && (
+              <>
+                <span className="co-label" id="co-print-label">
+                  Print on
                 </span>
-                <Button size="small" onClick={handleConnectPrinter} loading={isConnectingPrinter}>
-                  {bluetoothPrinter ? "Change printer" : "Connect printer"}
-                </Button>
-              </div>
+                <Segmented
+                  block
+                  aria-labelledby="co-print-label"
+                  options={[
+                    { label: "Thermal printer", value: "thermal" },
+                    { label: "This PC", value: "pc" },
+                    ...(isBluetoothSupported() ? [{ label: "Bluetooth", value: "bluetooth" }] : []),
+                  ]}
+                  value={printOn}
+                  onChange={(value) => {
+                    printChoiceTouchedRef.current = true;
+                    setPrintOn(value);
+                    setBluetoothPreferred(value === "bluetooth");
+                  }}
+                />
+                {printOn === "bluetooth" && (
+                  <div className="bill-bluetooth">
+                    <span className="co-hint">
+                      {bluetoothPrinter
+                        ? `Printer: ${bluetoothPrinter}`
+                        : isPrinterForgotten
+                          ? "Chrome forgot the printer on reload. Submit asks for it once."
+                          : "No printer connected. Submit asks for it once."}
+                    </span>
+                    <Button size="small" onClick={handleConnectPrinter} loading={isConnectingPrinter}>
+                      {bluetoothPrinter ? "Change printer" : "Connect printer"}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -697,7 +718,7 @@ export const CartForm = (props) => {
             {!isMobileValid && <p className="co-hint co-hint-center">Enter the customer's 10-digit mobile number to submit.</p>}
             {isMobileValid && isSubmitFocused && !isSubmitting && (
               <p className="co-hint co-hint-center co-hint-key">
-                Press <kbd>Enter</kbd> to save and print
+                Press <kbd>Enter</kbd> to save{printReceipt ? " and print" : ""}
               </p>
             )}
             <Popconfirm
